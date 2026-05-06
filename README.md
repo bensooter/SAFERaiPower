@@ -1,595 +1,1228 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>EPRI DCFlex Executive Evaluation Dashboard — Responsive v6</title>
-<style>
-:root {
-  --bg:#040611;
-  --bg2:#080b18;
-  --panel:rgba(16,24,48,.72);
-  --panel2:rgba(22,32,64,.84);
-  --panel3:rgba(255,255,255,.055);
-  --glass:rgba(255,255,255,.08);
-  --stroke:rgba(255,255,255,.13);
-  --stroke2:rgba(255,255,255,.22);
-  --text:#f7f9ff;
-  --muted:#aab5d6;
-  --muted2:#7782a4;
-  --cyan:#3ff4ff;
-  --blue:#66a7ff;
-  --purple:#a073ff;
-  --pink:#ff4ecd;
-  --green:#42f5b6;
-  --gold:#ffd166;
-  --orange:#ff9f43;
-  --red:#ff5c7a;
-  --shadow:0 24px 78px rgba(0,0,0,.48);
-  --radius:26px;
-  --radius2:18px;
-  --sans:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{
-  margin:0;
-  min-height:100vh;
-  color:var(--text);
-  font-family:var(--sans);
-  background:
-    radial-gradient(circle at 16% 8%, rgba(63,244,255,.18), transparent 28%),
-    radial-gradient(circle at 76% 10%, rgba(255,78,205,.16), transparent 30%),
-    radial-gradient(circle at 88% 84%, rgba(66,245,182,.11), transparent 24%),
-    linear-gradient(145deg, var(--bg), var(--bg2) 58%, #03040a);
-  overflow-x:hidden;
-}
-body:before{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:-2;
-  background-image:linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
-  background-size:42px 42px;
-  mask-image:radial-gradient(circle at center, black, transparent 82%);
-  opacity:.34;
-}
-#bgCanvas{position:fixed; inset:0; width:100vw; height:100vh; z-index:-1; pointer-events:none; opacity:.82}
-a{color:var(--cyan);text-decoration:none}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.wrap{width:min(1420px,calc(100% - 36px)); margin:0 auto; padding:18px 0 90px}
-.topbar{
-  position:sticky; top:0; z-index:20; backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
-  background:linear-gradient(180deg, rgba(4,6,17,.88), rgba(4,6,17,.58));
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.topbar-inner{width:min(1420px,calc(100% - 36px)); margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 0}
-.brand{display:flex; align-items:center; gap:12px; min-width:0}
-.logo{width:42px;height:42px;border-radius:14px; position:relative; overflow:hidden; background:linear-gradient(135deg,var(--cyan),var(--purple) 52%,var(--pink)); box-shadow:0 0 36px rgba(63,244,255,.22)}
-.logo:after{content:""; position:absolute; inset:7px; border:1px solid rgba(255,255,255,.55); border-radius:10px; transform:rotate(14deg)}
-.brand h1{font-size:14px; letter-spacing:.12em; text-transform:uppercase; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.brand p{margin:2px 0 0; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.comp-switch{display:flex; gap:8px; align-items:center; background:rgba(255,255,255,.055); border:1px solid var(--stroke); padding:6px; border-radius:999px; max-width:100%; overflow:auto}
-.comp-btn{border:0; color:var(--muted); padding:9px 14px; border-radius:999px; background:transparent; white-space:nowrap; display:flex; align-items:center; gap:8px; transition:.2s ease}
-.comp-btn .dot{width:8px;height:8px;border-radius:999px;background:var(--muted2)}
-.comp-btn.active{color:#04101a; background:linear-gradient(135deg,var(--cyan),var(--green)); box-shadow:0 12px 30px rgba(63,244,255,.16)}
-.comp-btn.active .dot{background:#04101a}
-.comp-btn.pending{color:var(--gold)}
-.comp-btn.pending .dot{background:var(--gold)}
-.nav{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:18px 0 22px}
-.nav button{border:1px solid var(--stroke); background:rgba(255,255,255,.055); color:var(--muted); padding:10px 14px; border-radius:999px; transition:.2s ease}
-.nav button.active{color:var(--text); border-color:rgba(63,244,255,.5); box-shadow:0 0 0 1px rgba(63,244,255,.14) inset,0 16px 42px rgba(63,244,255,.1); background:linear-gradient(135deg,rgba(63,244,255,.18),rgba(160,115,255,.14))}
-.mobile-nav{position:fixed; z-index:30; left:10px; right:10px; bottom:10px; display:none; padding:7px; border:1px solid var(--stroke); background:rgba(5,7,18,.84); backdrop-filter:blur(20px); border-radius:22px; box-shadow:var(--shadow)}
-.mobile-nav button{flex:1; min-width:0; border:0; background:transparent; color:var(--muted); border-radius:16px; padding:9px 3px; font-size:11px}
-.mobile-nav button.active{background:rgba(63,244,255,.16); color:var(--text)}
-.hero{position:relative; border:1px solid var(--stroke); background:linear-gradient(145deg,rgba(20,31,70,.78),rgba(11,14,32,.72)); border-radius:34px; overflow:hidden; box-shadow:var(--shadow)}
-.hero:before{content:""; position:absolute; inset:-2px; background:radial-gradient(circle at 22% 10%,rgba(63,244,255,.2),transparent 28%),radial-gradient(circle at 92% 18%,rgba(255,78,205,.16),transparent 24%); pointer-events:none}
-.hero-grid{position:relative; display:grid; grid-template-columns:1.2fr .8fr; gap:22px; padding:30px}
-.eyebrow{display:inline-flex; align-items:center; gap:8px; padding:8px 11px; border:1px solid rgba(63,244,255,.3); background:rgba(63,244,255,.08); border-radius:999px; color:var(--cyan); font-size:12px; font-weight:700; letter-spacing:.09em; text-transform:uppercase}
-.eyebrow:before{content:""; width:8px; height:8px; border-radius:99px; background:var(--cyan); box-shadow:0 0 18px var(--cyan)}
-.hero h2{font-size:clamp(34px,5vw,76px); line-height:.94; margin:18px 0 14px; letter-spacing:-.065em}
-.hero h2 .grad{background:linear-gradient(135deg,var(--cyan),var(--green) 44%,var(--gold)); -webkit-background-clip:text; background-clip:text; color:transparent}
-.hero-copy{max-width:860px; color:var(--muted); font-size:16px; line-height:1.65; margin:0}
-.hero-actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:22px}
-.primary,.secondary{border:1px solid var(--stroke2); padding:12px 16px; border-radius:15px; font-weight:800; transition:.2s ease}
-.primary{background:linear-gradient(135deg,var(--cyan),var(--green)); color:#041018; box-shadow:0 18px 40px rgba(63,244,255,.18)}
-.secondary{background:rgba(255,255,255,.06); color:var(--text)}
-.primary:hover,.secondary:hover,.nav button:hover,.comp-btn:hover{transform:translateY(-1px)}
-.status-card{border:1px solid var(--stroke); background:rgba(255,255,255,.065); border-radius:28px; padding:18px; display:grid; gap:14px}
-.winner-orb{position:relative; min-height:220px; display:grid; place-items:center; border-radius:24px; overflow:hidden; background:radial-gradient(circle at center,rgba(63,244,255,.2),rgba(66,245,182,.08) 40%,rgba(255,255,255,.04))}
-.winner-orb canvas{width:100%;height:220px; display:block}
-.orb-label{position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:20px}
-.orb-label .big{font-size:38px; font-weight:950; letter-spacing:-.055em}
-.orb-label .sub{color:var(--muted); font-size:13px; margin-top:4px}
-.metric-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:18px}
-.metric{border:1px solid var(--stroke); background:rgba(255,255,255,.06); border-radius:20px; padding:14px; min-height:102px}
-.metric .label{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
-.metric .value{font-size:28px; font-weight:950; margin-top:7px; letter-spacing:-.04em}
-.metric .hint{font-size:12px; color:var(--muted2); margin-top:4px}
-.tab{display:none; animation:fade .22s ease}
-.tab.active{display:block}
-@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:18px}
-.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
-.card{border:1px solid var(--stroke); background:linear-gradient(180deg,rgba(20,30,62,.74),rgba(12,16,34,.66)); border-radius:var(--radius); padding:20px; box-shadow:0 18px 54px rgba(0,0,0,.22); overflow:hidden}
-.card h3{margin:0 0 10px; font-size:19px; letter-spacing:-.02em}
-.card p{color:var(--muted); line-height:1.62}
-.card-head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px}
-.kicker{font-size:11px; color:var(--cyan); text-transform:uppercase; letter-spacing:.11em; font-weight:850}
-.badge{display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:5px 10px; font-size:12px; font-weight:850; border:1px solid var(--stroke)}
-.badge.a{background:rgba(63,244,255,.13); color:var(--cyan); border-color:rgba(63,244,255,.32)}
-.badge.b{background:rgba(255,209,102,.12); color:var(--gold); border-color:rgba(255,209,102,.33)}
-.badge.tie{background:rgba(255,255,255,.08); color:var(--muted)}
-.badge.pending{background:rgba(255,159,67,.12); color:var(--orange); border-color:rgba(255,159,67,.32)}
-.chart-card{min-height:360px}
-.canvas-wrap{position:relative; width:100%; height:320px}
-.canvas-wrap canvas{position:absolute; inset:0; width:100%; height:100%}
-.score-cards{display:grid; gap:12px}
-.score-row{display:grid; grid-template-columns:minmax(180px,1.2fr) repeat(5,minmax(64px,.42fr)) minmax(80px,.42fr) minmax(220px,1.4fr); gap:8px; align-items:center; border:1px solid var(--stroke); background:rgba(255,255,255,.045); border-radius:18px; padding:12px; transition:.2s ease}
-.score-row:hover{transform:translateY(-1px); border-color:rgba(63,244,255,.28); background:rgba(63,244,255,.055)}
-.score-head{color:var(--muted2); text-transform:uppercase; letter-spacing:.07em; font-size:11px; background:transparent; border-color:transparent; padding:6px 12px}
-.score-name{font-weight:850}
-.score-name small{display:block; color:var(--muted); margin-top:3px; font-weight:500}
-.num{font-family:var(--mono); font-weight:850; color:var(--text)}
-.rationale{color:var(--muted); font-size:13px; line-height:1.4}
-.controls{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px}
-.select{border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text); border-radius:14px; padding:10px 12px}
-.model-tabs{display:flex; flex-wrap:wrap; gap:8px; margin:14px 0}
-.model-tabs button{border:1px solid var(--stroke); background:rgba(255,255,255,.055); color:var(--muted); padding:10px 12px; border-radius:14px}
-.model-tabs button.active{color:var(--text); border-color:rgba(63,244,255,.42); background:rgba(63,244,255,.11)}
-.model-panel{display:none}
-.model-panel.active{display:block}
-.analysis-html{max-height:680px; overflow:auto; border:1px solid var(--stroke); background:rgba(0,0,0,.18); border-radius:20px; padding:18px; line-height:1.6}
-.analysis-html h1,.analysis-html h2,.analysis-html h3{letter-spacing:-.02em; margin:1.1em 0 .45em}
-.analysis-html p,.analysis-html li{color:#dfe6ff}
-.analysis-html table,.md-table{width:100%; border-collapse:collapse; font-size:13px}
-.analysis-html th,.analysis-html td,.md-table th,.md-table td{border:1px solid rgba(255,255,255,.12); padding:9px 10px; vertical-align:top}
-.analysis-html th,.md-table th{background:rgba(63,244,255,.09); color:var(--cyan); text-align:left}
-.table-scroll{overflow:auto; border-radius:16px}
-.callouts{display:grid; grid-template-columns:1fr 1fr; gap:14px}
-ul.clean{list-style:none; padding:0; margin:0; display:grid; gap:10px}
-ul.clean li{position:relative; color:#dfe6ff; line-height:1.5; padding-left:18px}
-ul.clean li:before{content:""; position:absolute; left:0; top:.62em; width:7px; height:7px; border-radius:99px; background:linear-gradient(135deg,var(--cyan),var(--green)); box-shadow:0 0 15px rgba(63,244,255,.45)}
-.prompt-box{white-space:pre-wrap; font-family:var(--mono); font-size:12px; line-height:1.55; max-height:720px; overflow:auto; border:1px solid var(--stroke); background:rgba(0,0,0,.28); border-radius:20px; padding:18px; color:#dfe6ff}
-.dropzone{border:1.5px dashed rgba(63,244,255,.42); background:linear-gradient(145deg,rgba(63,244,255,.08),rgba(255,78,205,.05)); border-radius:24px; padding:20px; text-align:center}
-.dropzone.drag{border-color:var(--green); background:rgba(66,245,182,.11)}
-.file-list{display:grid; gap:8px; margin-top:12px}
-.file-item{display:flex; justify-content:space-between; gap:10px; align-items:center; border:1px solid var(--stroke); border-radius:14px; background:rgba(255,255,255,.05); padding:10px 12px; font-size:13px; color:var(--muted)}
-.toast{position:fixed; z-index:90; left:50%; bottom:86px; transform:translateX(-50%) translateY(20px); opacity:0; pointer-events:none; background:rgba(5,7,18,.9); border:1px solid rgba(63,244,255,.3); color:var(--text); border-radius:999px; padding:11px 15px; box-shadow:var(--shadow); transition:.25s ease}
-.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
-.pending-panel{border:1px solid rgba(255,159,67,.3); background:linear-gradient(145deg,rgba(255,159,67,.09),rgba(255,78,205,.045)); border-radius:var(--radius); padding:22px}
-.lockup{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
-.pill{display:inline-flex; align-items:center; gap:7px; padding:7px 10px; border-radius:999px; border:1px solid var(--stroke); background:rgba(255,255,255,.05); color:var(--muted); font-size:12px}
-.pill:before{content:""; width:7px; height:7px; border-radius:99px; background:var(--cyan)}
-.source-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
-.source-box{border:1px solid var(--stroke); background:rgba(255,255,255,.045); border-radius:18px; padding:14px}
-.source-box h4{margin:0 0 8px}
-.source-box code{display:inline-block; color:var(--cyan); background:rgba(63,244,255,.08); padding:3px 6px; border-radius:8px; margin:2px; font-size:12px}
-.compare-strip{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
-.doc-card{position:relative; border:1px solid var(--stroke); background:rgba(255,255,255,.05); border-radius:22px; padding:18px; overflow:hidden}
-.doc-card:before{content:""; position:absolute; inset:0; background:radial-gradient(circle at 20% 0,rgba(63,244,255,.12),transparent 34%); pointer-events:none}
-.doc-card.b:before{background:radial-gradient(circle at 20% 0,rgba(255,209,102,.12),transparent 34%)}
-.doc-card > *{position:relative}
-.doc-card .score{font-size:42px; font-weight:950; letter-spacing:-.055em; margin:8px 0}
-.doc-card .owner{color:var(--muted)}
-hr.sep{border:0;border-top:1px solid var(--stroke);margin:18px 0}
-@media (max-width:1050px){
-  .hero-grid,.grid-2,.grid-3,.source-grid,.compare-strip{grid-template-columns:1fr}
-  .metric-grid{grid-template-columns:repeat(2,1fr)}
-  .score-row{grid-template-columns:1.1fr repeat(3,.55fr); gap:8px}
-  .score-row .hide-sm{display:none}
-  .score-head{display:none}
-}
-@media (max-width:720px){
-  .wrap{width:min(100% - 22px, 1420px); padding-bottom:108px}
-  .topbar-inner{width:min(100% - 22px, 1420px); flex-direction:column; align-items:stretch}
-  .brand h1{font-size:13px}
-  .brand p{font-size:11px}
-  .comp-switch{width:100%; justify-content:flex-start}
-  .nav{display:none}
-  .mobile-nav{display:flex}
-  .hero-grid{padding:20px; gap:16px}
-  .hero h2{font-size:42px}
-  .hero-copy{font-size:14px}
-  .metric-grid{grid-template-columns:1fr 1fr; gap:10px}
-  .metric{min-height:92px; padding:12px}
-  .metric .value{font-size:23px}
-  .card{padding:16px; border-radius:22px}
-  .canvas-wrap{height:280px}
-  .score-row{display:block; padding:14px}
-  .score-row > div{display:flex; justify-content:space-between; gap:12px; border-top:1px solid rgba(255,255,255,.08); padding:8px 0}
-  .score-row > div:first-child{display:block; border-top:0; padding-top:0}
-  .score-row > div:before{content:attr(data-label); color:var(--muted2); font-size:11px; text-transform:uppercase; letter-spacing:.07em}
-  .score-row > div:first-child:before{display:none}
-  .rationale{display:block!important}
-  .callouts{grid-template-columns:1fr}
-  .winner-orb,.winner-orb canvas{min-height:190px;height:190px}
-  .orb-label .big{font-size:32px}
-  .hero-actions .primary,.hero-actions .secondary{flex:1; text-align:center}
-}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SAFERai.Power | AI Risk Assessment Framework & Tools for the Electric Sector</title>
+  <meta name="description" content="SAFERai.Power is an EPRI-led, nonprofit initiative to build a sector-specific AI risk assessment framework, evidence-package templates, and practical tools for AI in electric utility operations." />
+  <style>
+    :root {
+      --navy: #1f4e79;
+      --navy-2: #153a5a;
+      --blue: #2e75b6;
+      --blue-2: #5b9bd5;
+      --light: #bdd7ee;
+      --sky: #eff6ff;
+      --accent: #f4a01c;
+      --accent-2: #d97706;
+      --green: #2e7d52;
+      --green-2: #e8f5ee;
+      --ink: #102033;
+      --muted: #5d7088;
+      --line: #d8e4f0;
+      --paper: #ffffff;
+      --wash: #f5f8fb;
+      --danger: #b42318;
+      --shadow: 0 18px 48px rgba(18, 55, 89, .13);
+      --shadow-soft: 0 10px 28px rgba(18, 55, 89, .08);
+      --radius-lg: 28px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --max: 1180px;
+    }
 
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--wash);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: inherit; }
+    .wrap { width: min(var(--max), calc(100% - 40px)); margin-inline: auto; }
+    .skip-link {
+      position: absolute; left: 12px; top: -100px; background: var(--accent); color: #111827;
+      padding: 10px 14px; border-radius: 8px; z-index: 50; font-weight: 800;
+    }
+    .skip-link:focus { top: 12px; }
 
-/* -------------------------------------------------------------------------
-   v6 responsive hardening for GitHub Pages / desktop browsers
-   Prevents wide tables, grid children, cards, and canvas panels from forcing
-   the whole document wider than the viewport. Content scrolls inside panels
-   instead of pushing the page off-screen.
-   ------------------------------------------------------------------------- */
-html,body{width:100%;max-width:100%;overflow-x:hidden;}
-body{overscroll-behavior-x:none;}
-body *{min-width:0;}
-.wrap,.topbar-inner{width:100%;max-width:1440px;margin-left:auto;margin-right:auto;padding-left:clamp(12px,2vw,28px);padding-right:clamp(12px,2vw,28px);}
-.topbar-inner{flex-wrap:wrap;}
-.brand{flex:1 1 300px;max-width:100%;}
-.brand>div:last-child{min-width:0;}
-.brand h1,.brand p{max-width:100%;}
-.comp-switch{flex:0 1 auto;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
-.comp-switch::-webkit-scrollbar,.model-tabs::-webkit-scrollbar,.nav::-webkit-scrollbar,.table-scroll::-webkit-scrollbar,.analysis-html::-webkit-scrollbar,.prompt-box::-webkit-scrollbar{height:8px;width:8px;}
-.comp-switch::-webkit-scrollbar-thumb,.model-tabs::-webkit-scrollbar-thumb,.nav::-webkit-scrollbar-thumb,.table-scroll::-webkit-scrollbar-thumb,.analysis-html::-webkit-scrollbar-thumb,.prompt-box::-webkit-scrollbar-thumb{background:rgba(255,255,255,.20);border-radius:999px;}
-.nav{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;padding-bottom:2px;}
-.hero,.card,.tab,.status-card,.metric,.doc-card,.source-box,.pending-panel,.dropzone{max-width:100%;min-width:0;}
-.hero-grid{grid-template-columns:minmax(0,1.18fr) minmax(280px,.82fr);align-items:stretch;}
-.grid-2{grid-template-columns:repeat(2,minmax(0,1fr));}
-.grid-3{grid-template-columns:repeat(3,minmax(0,1fr));}
-.metric-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
-.source-grid,.compare-strip,.callouts{grid-template-columns:repeat(2,minmax(0,1fr));}
-.card-head{min-width:0;}
-.card-head>*{min-width:0;}
-.chart-card{min-height:min(360px,calc(100vh - 220px));}
-.canvas-wrap{width:100%;max-width:100%;height:clamp(240px,32vh,320px);overflow:hidden;}
-.canvas-wrap canvas,.winner-orb canvas,#bgCanvas{max-width:100%;}
-.winner-orb{min-width:0;}
-.hero h2,.hero-copy,.metric .value,.doc-card .score,.card h3,.source-box h4,.score-name,.score-name small,.orb-label .big,.orb-label .sub{overflow-wrap:anywhere;word-break:normal;}
-.hero h2{font-size:clamp(34px,4.9vw,72px);}
-.doc-card .score{font-size:clamp(30px,3vw,42px);}
-.metric .value{font-size:clamp(22px,2.3vw,28px);}
-.score-cards{max-width:100%;overflow:hidden;}
-.score-row{grid-template-columns:minmax(170px,1.12fr) repeat(5,minmax(58px,.42fr)) minmax(64px,.34fr) minmax(170px,.86fr);max-width:100%;}
-.score-row>*{min-width:0;}
-.rationale{overflow-wrap:anywhere;}
-.analysis-html,.prompt-box{max-width:100%;max-height:min(720px,calc(100vh - 190px));overflow:auto;overflow-wrap:anywhere;word-break:normal;-webkit-overflow-scrolling:touch;}
-.table-scroll{display:block;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain;}
-.table-scroll table,.analysis-html table,.md-table{max-width:none;}
-.table-scroll table,.md-table{min-width:min(760px,100%);}
-.analysis-html pre,.analysis-html code,.prompt-box code{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;}
-.analysis-html p,.analysis-html li,.card p{overflow-wrap:anywhere;}
-.model-tabs{max-width:100%;overflow-x:auto;flex-wrap:nowrap;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
-.model-tabs button{white-space:nowrap;flex:0 0 auto;}
-.select{max-width:100%;}
-.lockup{max-width:100%;}
-.pill{max-width:100%;overflow-wrap:anywhere;}
-.file-item{min-width:0;}
-.file-item span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .topline {
+      background: var(--navy-2);
+      color: #dbeafe;
+      font-size: 13px;
+      letter-spacing: .02em;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .topline .wrap {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .topline strong { color: #fff; }
+    .topline a { color: #fff; font-weight: 750; text-decoration: none; }
 
-@media (max-width:1280px){
-  .hero-grid{grid-template-columns:minmax(0,1fr) minmax(260px,.78fr);padding:26px;}
-  .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .score-row{grid-template-columns:minmax(190px,1fr) repeat(3,minmax(68px,.38fr));gap:8px;}
-  .score-row.score-head{display:none;}
-  .score-row>div:nth-child(n+5){grid-column:auto;}
-}
-@media (max-width:1100px){
-  .hero-grid,.grid-2,.grid-3,.source-grid,.compare-strip,.callouts{grid-template-columns:1fr;}
-  .chart-card{min-height:auto;}
-  .analysis-html,.prompt-box{max-height:min(680px,calc(100vh - 170px));}
-}
-@media (min-width:721px) and (max-width:1100px){
-  .nav{flex-wrap:wrap;overflow-x:visible;}
-}
-@media (max-width:720px){
-  .wrap,.topbar-inner{padding-left:11px;padding-right:11px;}
-  .brand{flex-basis:100%;}
-  .brand h1{white-space:normal;line-height:1.2;}
-  .brand p{white-space:normal;line-height:1.25;}
-  .comp-switch{width:100%;}
-  .hero{border-radius:26px;}
-  .hero-grid{grid-template-columns:1fr;padding:20px;}
-  .hero h2{font-size:clamp(34px,10vw,44px);line-height:1;}
-  .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .canvas-wrap{height:260px;}
-  .analysis-html,.prompt-box{max-height:none;}
-  .table-scroll table,.md-table{min-width:680px;}
-}
-@media (max-width:460px){
-  .metric-grid{grid-template-columns:1fr;}
-  .hero-actions .primary,.hero-actions .secondary{flex-basis:100%;}
-  .canvas-wrap{height:235px;}
-  .winner-orb,.winner-orb canvas{height:180px;min-height:180px;}
-}
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255, 255, 255, .94);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(31, 78, 121, .16);
+    }
+    .nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 74px;
+      gap: 22px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      min-width: max-content;
+    }
+    .brand-mark {
+      width: 46px; height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      box-shadow: 0 10px 24px rgba(31,78,121,.24);
+      border: 2px solid rgba(244,160,28,.35);
+    }
+    .brand-name { font-weight: 950; color: var(--navy); font-size: 23px; line-height: 1; letter-spacing: -.04em; }
+    .brand-sub { font-size: 11px; color: var(--muted); font-weight: 800; letter-spacing: .13em; text-transform: uppercase; margin-top: 4px; }
 
-</style>
+    .nav-links { display: flex; align-items: center; gap: 6px; }
+    .nav-links a {
+      text-decoration: none;
+      color: #27415d;
+      font-weight: 760;
+      font-size: 14px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .nav-links a:hover { background: var(--sky); color: var(--navy); }
+    .cta-small {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #102033 !important;
+      background: var(--accent);
+      border: 1px solid rgba(180, 95, 0, .2);
+      box-shadow: 0 9px 24px rgba(244,160,28,.28);
+    }
+    .menu-toggle {
+      display: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--navy);
+      font-weight: 850;
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 8% 12%, rgba(91,155,213,.22), transparent 28%),
+        radial-gradient(circle at 92% 16%, rgba(244,160,28,.18), transparent 24%),
+        linear-gradient(135deg, #102b46 0%, var(--navy) 50%, #2e75b6 100%);
+      color: white;
+      border-bottom: 5px solid var(--accent);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.04));
+      pointer-events: none;
+    }
+    .hero .wrap {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 42px;
+      align-items: center;
+      padding-block: clamp(58px, 8vw, 106px);
+    }
+    .eyebrow {
+      display: inline-flex;
+      gap: 9px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.24);
+      background: rgba(255,255,255,.11);
+      color: #eaf5ff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: .035em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .pulse { width: 9px; height: 9px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 0 7px rgba(244,160,28,.18); }
+    h1, h2, h3 { margin: 0; line-height: 1.05; letter-spacing: -.05em; }
+    h1 { font-size: clamp(46px, 6.4vw, 82px); max-width: 810px; }
+    .hero-lede {
+      font-size: clamp(18px, 2.1vw, 23px);
+      color: #dbeafe;
+      max-width: 720px;
+      margin: 24px 0 28px;
+      line-height: 1.45;
+    }
+    .hero-actions, .section-actions {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 50px;
+      padding: 13px 18px;
+      border-radius: 999px;
+      font-weight: 900;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+      cursor: pointer;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--accent); color: #141414; box-shadow: 0 14px 34px rgba(244,160,28,.32); }
+    .btn-primary:hover { background: #ffb13e; }
+    .btn-secondary { color: #fff; background: rgba(255,255,255,.11); border-color: rgba(255,255,255,.24); }
+    .btn-secondary:hover { background: rgba(255,255,255,.18); }
+    .btn-outline { color: var(--navy); background: #fff; border-color: var(--line); box-shadow: var(--shadow-soft); }
+    .btn-outline:hover { background: var(--sky); }
+    .microcopy { margin-top: 12px; color: #bfdbfe; font-size: 13px; }
+    .microcopy a { color: #fff; font-weight: 850; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.45); }
+
+    .hero-card {
+      background: rgba(255,255,255,.96);
+      color: var(--ink);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 24px 70px rgba(0,0,0,.24);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.38);
+    }
+    .hero-card-top { background: linear-gradient(135deg, #f8fbff, #eef6ff); padding: 26px; border-bottom: 1px solid var(--line); }
+    .hero-card h2 { font-size: clamp(26px, 3vw, 36px); color: var(--navy); margin-bottom: 10px; }
+    .hero-card p { margin: 0; color: var(--muted); }
+    .hero-card-body { padding: 24px 26px 26px; }
+    .proof-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+    .proof-tile {
+      padding: 16px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+      text-align: center;
+    }
+    .proof-tile strong { display: block; font-size: 25px; color: var(--navy); line-height: 1; letter-spacing: -.04em; }
+    .proof-tile span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; font-weight: 760; }
+    .check-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .check-list li { display: flex; gap: 12px; align-items: flex-start; color: #284158; }
+    .check-list li::before {
+      content: "✓";
+      display: inline-grid;
+      place-items: center;
+      width: 22px; height: 22px;
+      border-radius: 999px;
+      flex: 0 0 22px;
+      background: var(--green-2);
+      color: var(--green);
+      font-weight: 950;
+      margin-top: 1px;
+    }
+
+    section { padding-block: clamp(58px, 8vw, 92px); scroll-margin-top: 90px; }
+    .section-head {
+      max-width: 850px;
+      margin-bottom: 30px;
+    }
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--blue);
+      font-weight: 950;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+      font-size: 12px;
+      margin-bottom: 11px;
+    }
+    .kicker::before { content: ""; width: 24px; height: 3px; border-radius: 999px; background: var(--accent); }
+    h2 { font-size: clamp(32px, 4.1vw, 55px); color: var(--navy); }
+    .section-lede { font-size: 18px; color: var(--muted); max-width: 820px; margin: 15px 0 0; }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+    }
+    .card-pad { padding: clamp(22px, 3vw, 32px); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+    .split { display: grid; grid-template-columns: .92fr 1.08fr; gap: 28px; align-items: stretch; }
+
+    .problem-card { padding: 26px; min-height: 100%; position: relative; overflow: hidden; }
+    .problem-card::after { content: ""; position: absolute; inset: auto -40px -60px auto; width: 130px; height: 130px; background: rgba(46,117,182,.09); border-radius: 50%; }
+    .problem-card h3 { color: var(--navy); font-size: 21px; margin-bottom: 10px; letter-spacing: -.02em; }
+    .problem-card p { color: var(--muted); margin: 0; }
+    .failure-list { display: grid; gap: 10px; margin-top: 18px; }
+    .failure-pill {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: #314a64;
+      font-weight: 760;
+    }
+    .failure-pill span { color: var(--accent-2); font-weight: 950; }
+
+    .principle {
+      padding: 22px;
+      border-top: 5px solid var(--blue);
+      min-height: 100%;
+    }
+    .principle .icon {
+      width: 46px; height: 46px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background: var(--sky);
+      color: var(--navy);
+      font-size: 22px;
+      margin-bottom: 15px;
+    }
+    .principle h3 { font-size: 22px; color: var(--navy); margin-bottom: 10px; letter-spacing: -.03em; }
+    .principle p { margin: 0; color: var(--muted); }
+
+    .layer-card { padding: 23px; position: relative; overflow: hidden; }
+    .layer-num {
+      display: inline-grid;
+      place-items: center;
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 950;
+      margin-bottom: 14px;
+    }
+    .layer-card h3 { color: var(--navy); font-size: 22px; margin-bottom: 10px; letter-spacing: -.03em; }
+    .layer-card p { color: var(--muted); margin: 0; }
+
+    .system-file {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 24px;
+      align-items: start;
+      margin-top: 22px;
+      background: linear-gradient(135deg, #fff, #f2f8ff);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+    .system-file .intro { padding: 30px; background: var(--navy); color: #fff; min-height: 100%; }
+    .system-file .intro h3 { font-size: 30px; margin-bottom: 12px; }
+    .system-file .intro p { color: #dbeafe; margin: 0; }
+    .artifact-grid { padding: 24px; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    .artifact { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; color: #314a64; font-weight: 780; font-size: 14px; }
+
+    .assurance-table {
+      overflow: hidden;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      background: #fff;
+    }
+    .assurance-row {
+      display: grid;
+      grid-template-columns: .8fr 1fr 1fr;
+      border-bottom: 1px solid var(--line);
+    }
+    .assurance-row:last-child { border-bottom: 0; }
+    .assurance-row > div { padding: 16px 18px; }
+    .assurance-row.header { background: var(--navy); color: #fff; font-weight: 950; }
+    .assurance-row:not(.header) > div:first-child { background: var(--sky); color: var(--navy); font-weight: 900; }
+
+    .tier-card { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 100%; }
+    .tier-head { padding: 24px 24px 18px; color: #fff; background: var(--navy); }
+    .tier-head.standard { background: var(--blue); }
+    .tier-head.emerging { background: var(--blue-2); }
+    .tier-head h3 { font-size: 27px; letter-spacing: -.03em; }
+    .tier-head p { margin: 6px 0 0; color: rgba(255,255,255,.86); font-weight: 750; font-size: 14px; }
+    .tier-price { padding: 24px; background: #edf4fb; border-bottom: 1px solid var(--line); text-align: center; }
+    .tier-price strong { display: block; font-size: clamp(36px, 5vw, 49px); color: var(--navy); line-height: 1; letter-spacing: -.06em; }
+    .tier-price span { display: block; font-size: 12px; font-weight: 950; text-transform: uppercase; letter-spacing: .16em; color: #4d6177; margin-top: 8px; }
+    .tier-price em { display: block; margin-top: 16px; padding-top: 16px; border-top: 1px solid #d5e4f2; color: var(--navy); font-weight: 900; font-style: normal; }
+    .tier-body { padding: 24px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 20px; }
+    .who { font-size: 13px; font-weight: 950; color: var(--blue); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 8px; }
+    .tier-body p { margin: 0; color: #314a64; }
+    .access-note {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: .8fr 1.2fr;
+      gap: 20px;
+      align-items: center;
+      padding: 22px;
+      border-radius: var(--radius-md);
+      border: 1px dashed rgba(46,117,182,.55);
+      background: #f7fbff;
+    }
+    .access-note strong { color: var(--navy); }
+
+    .receive-card { padding: 23px; min-height: 100%; }
+    .receive-card h3 { font-size: 20px; color: var(--navy); margin-bottom: 9px; letter-spacing: -.02em; }
+    .receive-card p { margin: 0; color: var(--muted); }
+
+    .roadmap { position: relative; display: grid; gap: 16px; }
+    .roadmap::before { content: ""; position: absolute; top: 28px; bottom: 28px; left: 26px; width: 3px; background: #d7e6f5; }
+    .road-item { position: relative; display: grid; grid-template-columns: 58px 1fr; gap: 18px; align-items: start; }
+    .road-dot { width: 55px; height: 55px; border-radius: 18px; display: grid; place-items: center; background: var(--navy); color: #fff; font-weight: 950; z-index: 1; border: 4px solid #fff; box-shadow: 0 6px 16px rgba(31,78,121,.2); }
+    .road-content { padding: 20px 22px; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-soft); }
+    .road-content h3 { color: var(--navy); font-size: 22px; margin-bottom: 5px; letter-spacing: -.03em; }
+    .road-meta { color: var(--accent-2); font-size: 13px; font-weight: 950; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 8px; }
+    .road-content p { color: var(--muted); margin: 0; }
+
+    .faq-tools {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .faq-search {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      min-height: 52px;
+      padding: 0 17px;
+      font-size: 16px;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+    .faq-search:focus { outline: 3px solid rgba(46,117,182,.2); border-color: var(--blue); }
+    .faq-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #314a64;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+    .filter-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .faq-list { display: grid; gap: 10px; }
+    .faq-item {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(18,55,89,.05);
+    }
+    .faq-item[hidden] { display: none; }
+    .faq-item summary {
+      cursor: pointer;
+      padding: 17px 20px;
+      font-weight: 900;
+      color: var(--navy);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after { content: "+"; font-size: 24px; color: var(--blue); font-weight: 850; }
+    .faq-item[open] summary::after { content: "–"; }
+    .faq-answer { padding: 0 20px 20px; color: #40566f; }
+    .faq-answer p { margin: 0; }
+    .faq-answer ul { margin: 10px 0 0 20px; padding: 0; }
+    .faq-answer li { margin: 6px 0; }
+    .faq-count { color: var(--muted); font-size: 14px; font-weight: 780; }
+
+    .final-cta {
+      background:
+        radial-gradient(circle at 15% 20%, rgba(244,160,28,.22), transparent 25%),
+        linear-gradient(135deg, var(--navy-2), var(--navy));
+      color: #fff;
+      border-radius: var(--radius-lg);
+      padding: clamp(30px, 5vw, 54px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .final-cta h2 { color: #fff; max-width: 760px; }
+    .final-cta p { color: #dbeafe; font-size: 18px; max-width: 780px; }
+    .contact-panel {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      margin-top: 28px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 22px;
+      padding: 20px;
+    }
+    .contact-panel strong { display: block; font-size: 20px; }
+    .contact-panel span { display: block; color: #bfdbfe; margin-top: 2px; }
+
+    footer {
+      background: #102033;
+      color: #d8e4f0;
+      padding: 30px 0;
+      font-size: 14px;
+    }
+    footer .wrap { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+    footer a { color: #fff; text-decoration: none; font-weight: 800; }
+
+    .sticky-mobile-cta {
+      display: none;
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 45;
+      background: var(--accent);
+      color: #111827;
+      box-shadow: 0 18px 46px rgba(17,24,39,.24);
+      border-radius: 999px;
+      text-align: center;
+      padding: 13px 18px;
+      font-weight: 950;
+      text-decoration: none;
+      border: 1px solid rgba(180, 95, 0, .25);
+    }
+
+    @media (max-width: 1040px) {
+      .nav-links { gap: 2px; }
+      .nav-links a { padding-inline: 8px; font-size: 13px; }
+      .hero .wrap { grid-template-columns: 1fr; }
+      .hero-card { max-width: 760px; }
+      .grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .grid-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .split, .system-file { grid-template-columns: 1fr; }
+      .access-note { grid-template-columns: 1fr; }
+      .faq-tools { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 760px) {
+      .wrap { width: min(100% - 28px, var(--max)); }
+      .topline .wrap { justify-content: center; text-align: center; }
+      .topline .hide-mobile { display: none; }
+      .menu-toggle { display: inline-flex; align-items: center; gap: 6px; }
+      .nav-row { min-height: 66px; }
+      .brand-name { font-size: 20px; }
+      .brand-sub { display: none; }
+      .brand-mark { width: 41px; height: 41px; border-radius: 12px; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 66px;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        box-shadow: 0 16px 32px rgba(17,24,39,.09);
+        padding: 10px 14px 16px;
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { border-radius: 12px; padding: 12px 14px; }
+      .nav-links .cta-small { text-align: center; }
+      .hero .wrap { padding-block: 50px 64px; }
+      .proof-grid { grid-template-columns: 1fr; }
+      .hero-actions .btn, .section-actions .btn { width: 100%; }
+      .grid-2, .grid-3, .grid-4, .artifact-grid { grid-template-columns: 1fr; }
+      .assurance-row { grid-template-columns: 1fr; }
+      .assurance-row.header { display: none; }
+      .assurance-row > div { border-bottom: 1px solid var(--line); }
+      .assurance-row > div:last-child { border-bottom: 0; }
+      .contact-panel { grid-template-columns: 1fr; }
+      .sticky-mobile-cta { display: block; }
+      body { padding-bottom: 72px; }
+      footer .wrap { display: block; }
+      footer p { margin: 8px 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .btn { transition: none; }
+      .btn:hover { transform: none; }
+    }
+  </style>
 </head>
 <body>
-<canvas id="bgCanvas" aria-hidden="true"></canvas>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <h1>DCFlex Executive Evaluation Dashboard</h1>
-        <p>Frontier-model scoring • Canvas visuals • Mobile-ready share page</p>
-      </div>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <div class="topline">
+    <div class="wrap">
+      <div><strong>Founding Member Engagement</strong> | Practical AI risk assessment, evidence packages, and tools for utility operations</div>
+      <div class="hide-mobile">Ready to talk? <a href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Founding%20Member%20Interest&body=Hello%2C%0A%0AI%27d%20like%20to%20schedule%20an%20initial%20briefing%20about%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0AQuestions%3A%0A">bsooter@epri.com</a></div>
     </div>
-    <div class="comp-switch" id="competitionSwitch" aria-label="Competition selector"></div>
   </div>
-</header>
-<main class="wrap">
-  <nav class="nav" id="desktopNav" aria-label="Dashboard navigation"></nav>
-  <section class="hero" id="hero"></section>
-  <div id="tab-overview" class="tab active"></div>
-  <div id="tab-scores" class="tab"></div>
-  <div id="tab-models" class="tab"></div>
-  <div id="tab-combined" class="tab"></div>
-  <div id="tab-prompt" class="tab"></div>
-  <div id="tab-sources" class="tab"></div>
-</main>
-<nav class="mobile-nav" id="mobileNav" aria-label="Mobile dashboard navigation"></nav>
-<div class="toast" id="toast"></div>
-<script id="dashboard-data" type="application/json">{"generatedAt": "2026-05-04", "dashboardVersion": "multi-competition-canvas-v6-responsive-github-pages", "competitions": {"adi": {"id": "adi", "status": "complete", "company": "Analog Devices", "targetShort": "ADI", "title": "Analog Devices Executive Outreach", "subtitle": "Persuading an Analog Devices executive to join or engage with EPRI DCFlex", "audience": "Analog Devices executive", "docA": {"label": "Document A", "owner": "Arshad", "display": "Document A — Arshad"}, "docB": {"label": "Document B", "owner": "Eamonn", "display": "Document B — Eamonn"}, "categories": [{"id": 1, "key": "strategic_fit", "short": "Strategic fit", "name": "Executive relevance and strategic fit", "weight": 12}, {"id": 2, "key": "personalization", "short": "Personalization", "name": "Analog Devices-specific personalization and insight", "weight": 10}, {"id": 3, "key": "dcflex_value", "short": "DCFlex value", "name": "Clarity of the DCFlex value proposition", "weight": 12}, {"id": 4, "key": "business_case", "short": "Business case", "name": "Business case and value to Analog Devices", "weight": 12}, {"id": 5, "key": "ask", "short": "Ask / next steps", "name": "Specificity of the ask and next steps", "weight": 9}, {"id": 6, "key": "credibility", "short": "Credibility", "name": "Credibility, evidence, and substantiation", "weight": 10}, {"id": 7, "key": "urgency", "short": "Urgency", "name": "Persuasiveness, differentiation, and urgency", "weight": 8}, {"id": 8, "key": "tone", "short": "Executive tone", "name": "Executive tone and concision", "weight": 7}, {"id": 9, "key": "structure", "short": "Structure", "name": "Structure, flow, and readability", "weight": 7}, {"id": 10, "key": "completeness", "short": "Completeness", "name": "Package completeness and communication effectiveness", "weight": 5}, {"id": 11, "key": "risk", "short": "Risk mgmt.", "name": "Risk management, factual accuracy, and professionalism", "weight": 5}, {"id": 12, "key": "memorability", "short": "Memorability", "name": "Memorability and relationship-building potential", "weight": 4}], "models": {"gemini": {"label": "Gemini 3 Deepthink", "short": "Gemini", "source": "Gemini-analysis(1).md", "accent": "#7c5cff", "totalA": 94.8, "totalB": 81.4, "confidence": "High", "headline": "Document A is a “masterclass” in hyper-personalized executive persuasion.", "summary": "Gemini saw Document A as the strongest outreach vehicle because it bridges DCFlex to ADI’s specific commercial roadmap, named leaders, product series, and the $25M research-leverage framing. Document B was credited for concision and its strategic-value framing, but it lacked the same insider feel and actionable next step.", "bestA": ["Deep ADI personalization, including call context and specific people/products.", "Strong “instrumentation layer” positioning for ADI.", "Clear ROI hook: $750K access to a $25M research platform."], "watchoutsA": ["Dense read for a busy executive.", "Some technical jargon may be too CTO-oriented."], "bestB": ["Three-pillar structure is easy to digest.", "Flex MOSAIC language helps turn flexibility into a market classification concept.", "Value-chain visual/narrative is more executive-scannable."], "watchoutsB": ["Feels like a generic brochure relative to A.", "Next step is too passive compared with A’s scoping session."], "rows": [{"categoryId": 1, "aRaw": 9.5, "aWeighted": 11.4, "bRaw": 8.5, "bWeighted": 10.2, "winner": "A", "rationale": "A aligns with ADI's shift to system-level solutions."}, {"categoryId": 2, "aRaw": 10.0, "aWeighted": 10.0, "bRaw": 7.0, "bWeighted": 7.0, "winner": "A", "rationale": "A cites specific April 2026 calls and ADI-specific R&D."}, {"categoryId": 3, "aRaw": 9.0, "aWeighted": 10.8, "bRaw": 9.0, "bWeighted": 10.8, "winner": "Tie", "rationale": "Both clarify the workstream structure effectively."}, {"categoryId": 4, "aRaw": 10.0, "aWeighted": 12.0, "bRaw": 8.0, "bWeighted": 9.6, "winner": "A", "rationale": "A frames membership as a $25M research-platform leverage."}, {"categoryId": 5, "aRaw": 9.5, "aWeighted": 8.55, "bRaw": 7.0, "bWeighted": 6.3, "winner": "A", "rationale": "A proposes a specific follow-up technical scoping session."}, {"categoryId": 6, "aRaw": 9.5, "aWeighted": 9.5, "bRaw": 8.0, "bWeighted": 8.0, "winner": "A", "rationale": "A uses ADI’s own published research and product series."}, {"categoryId": 7, "aRaw": 9.0, "aWeighted": 7.2, "bRaw": 7.5, "bWeighted": 6.0, "winner": "A", "rationale": "A highlights additional capacity available to members joining now."}, {"categoryId": 8, "aRaw": 8.5, "aWeighted": 5.95, "bRaw": 9.0, "bWeighted": 6.3, "winner": "B", "rationale": "B is more concise and punchy for a very busy executive."}, {"categoryId": 9, "aRaw": 9.0, "aWeighted": 6.3, "bRaw": 8.5, "bWeighted": 5.95, "winner": "A", "rationale": "A’s E1–E5 engagement areas create a clear technical roadmap."}, {"categoryId": 10, "aRaw": 9.5, "aWeighted": 4.75, "bRaw": 7.0, "bWeighted": 3.5, "winner": "A", "rationale": "A covers everything from IP handling to specific next steps."}, {"categoryId": 11, "aRaw": 9.5, "aWeighted": 4.75, "bRaw": 9.5, "bWeighted": 4.75, "winner": "Tie", "rationale": "Both maintain high professional standards and confidentiality."}, {"categoryId": 12, "aRaw": 9.0, "aWeighted": 3.6, "bRaw": 7.5, "bWeighted": 3.0, "winner": "A", "rationale": "A’s Hardware Readiness Framework is a sticky concept."}], "fullHtml": "<p>This analysis evaluates two competing communication packages aimed at persuading an <strong>Analog Devices (ADI)<\/strong> executive to join the EPRI <strong>DCFlex<\/strong> initiative. <strong>Document A<\/strong> is a comprehensive <strong>Research Partnership Invitation<\/strong>. It functions as a formal proposal or briefing memo, providing a deep dive into technical intersections, specific ADI product alignments, and a clear financial/strategic ROI. <strong>Document B<\/strong> is a <strong>Strategic Value Brief<\/strong>, likely intended as a high-level executive summary or the narrative foundation for a slide deck. It focuses on the &quot;datacenter-to-grid&quot; value chain and the program&#x27;s conceptual framework.<\/p>\n<h2>---<\/h2>\n<p><strong>1\\. Executive Summary<\/strong><\/p>\n<p><strong>The Winner is Document A.<\/strong> Document A is a masterclass in executive persuasion through <strong>hyper-personalization<\/strong>. While Document B provides a solid conceptual overview, Document A bridges the gap between EPRI’s research and ADI’s specific commercial roadmap. It references specific ADI people, recent M\\&amp;A (Sense), and specific product series (AD777x). It transforms a $250,000 membership fee into a $25 million &quot;Research Leverage&quot; opportunity, providing the exact type of &quot;market credential&quot; that high-level semiconductor executives value when trying to move from component supplier to system-level solution provider.<\/p>\n<h2>---<\/h2>\n<p><strong>2\\. Scorecard Table<\/strong><\/p>\n<div class=\"table-scroll\"><table class=\"md-table\"><thead><tr><th>Category<\/th><th>Weight<\/th><th>Doc A Raw<\/th><th>Doc A Weighted<\/th><th>Doc B Raw<\/th><th>Doc B Weighted<\/th><th>Winner<\/th><th>Rationale<\/th><\/tr><\/thead><tbody>\n<tr><td>1\\. Strategic Fit<\/td><td>12<\/td><td>9.5<\/td><td>11.4<\/td><td>8.5<\/td><td>10.2<\/td><td><strong>A<\/strong><\/td><td>A aligns with ADI&#x27;s shift to &quot;system-level solutions&quot;.<\/td><\/tr>\n<tr><td>2\\. Personalization<\/td><td>10<\/td><td>10.0<\/td><td>10.0<\/td><td>7.0<\/td><td>7.0<\/td><td><strong>A<\/strong><\/td><td>A cites specific April 2026 calls and ADI-specific R\\&amp;D.<\/td><\/tr>\n<tr><td>3\\. DCFlex Value Prop<\/td><td>12<\/td><td>9.0<\/td><td>10.8<\/td><td>9.0<\/td><td>10.8<\/td><td><strong>Tie<\/strong><\/td><td>Both clarify the workstream structure effectively.<\/td><\/tr>\n<tr><td>4\\. Business Case<\/td><td>12<\/td><td>10.0<\/td><td>12.0<\/td><td>8.0<\/td><td>9.6<\/td><td><strong>A<\/strong><\/td><td>A frames membership as a $25M &quot;Research Platform&quot; leverage.<\/td><\/tr>\n<tr><td>5\\. Specificity of Ask<\/td><td>9<\/td><td>9.5<\/td><td>8.55<\/td><td>7.0<\/td><td>6.3<\/td><td><strong>A<\/strong><\/td><td>A proposes a specific &quot;follow-up technical scoping session&quot;.<\/td><\/tr>\n<tr><td>6\\. Credibility/Evidence<\/td><td>10<\/td><td>9.5<\/td><td>9.5<\/td><td>8.0<\/td><td>8.0<\/td><td><strong>A<\/strong><\/td><td>A uses ADI’s own published research and product series.<\/td><\/tr>\n<tr><td>7\\. Persuasiveness/Urgency<\/td><td>8<\/td><td>9.0<\/td><td>7.2<\/td><td>7.5<\/td><td>6.0<\/td><td><strong>A<\/strong><\/td><td>A highlights &quot;additional capacity&quot; available to members joining now.<\/td><\/tr>\n<tr><td>8\\. Executive Tone<\/td><td>7<\/td><td>8.5<\/td><td>5.95<\/td><td>9.0<\/td><td>6.3<\/td><td><strong>B<\/strong><\/td><td>B is more concise and punchy for a very busy executive.<\/td><\/tr>\n<tr><td>9\\. Structure/Flow<\/td><td>7<\/td><td>9.0<\/td><td>6.3<\/td><td>8.5<\/td><td>5.95<\/td><td><strong>A<\/strong><\/td><td>A’s &quot;E1-E5&quot; engagement areas create a clear technical roadmap .<\/td><\/tr>\n<tr><td>10\\. Completeness<\/td><td>5<\/td><td>9.5<\/td><td>4.75<\/td><td>7.0<\/td><td>3.5<\/td><td><strong>A<\/strong><\/td><td>A covers everything from IP handling to specific next steps.<\/td><\/tr>\n<tr><td>11\\. Risk/Accuracy<\/td><td>5<\/td><td>9.5<\/td><td>4.75<\/td><td>9.5<\/td><td>4.75<\/td><td><strong>Tie<\/strong><\/td><td>Both maintain high professional standards and confidentiality.<\/td><\/tr>\n<tr><td>12\\. Memorability<\/td><td>4<\/td><td>9.0<\/td><td>3.6<\/td><td>7.5<\/td><td>3.0<\/td><td><strong>A<\/strong><\/td><td>A&#x27;s &quot;Hardware Readiness Framework&quot; is a sticky concept.<\/td><\/tr>\n<tr><td><strong>TOTALS<\/strong><\/td><td><strong>100<\/strong><\/td><td><\/td><td><strong>94.8<\/strong><\/td><td><\/td><td><strong>81.4<\/strong><\/td><td><strong>A<\/strong><\/td><td><\/td><\/tr>\n<\/tbody><\/table><\/div>\n<h2>---<\/h2>\n<p><strong>3\\. Individual Analysis of Document A<\/strong><\/p>\n<h3><strong>Main Strengths<\/strong><\/h3>\n<ul><li><strong>Deep Personalization:<\/strong> References the April 30 call with specific ADI leaders like Melissa Chan and Peadar Forbes, signaling that this isn&#x27;t a &quot;cold&quot; pitch.<\/li><\/ul>\n<ul><li><strong>The &quot;Instrumentation Layer&quot; Positioning:<\/strong> Smartly positions ADI technologies as the &quot;instrumentation layer&quot; that makes emerging hardware observable and controllable.<\/li><\/ul>\n<ul><li><strong>Concrete Technical Intersections:<\/strong> The &quot;E1–E5&quot; sections provide surgical precision on where ADI’s tech (like the AD777x series) meets DCFlex research (like the EPRI waveform library).<\/li><\/ul>\n<h3><strong>Main Weaknesses<\/strong><\/h3>\n<ul><li><strong>Density:<\/strong> It is a heavy read. A busy executive might skip the detailed tables in the middle if they aren&#x27;t technically inclined.<\/li><li><strong>Technical Jargon:<\/strong> While appropriate for ADI, terms like &quot;PSCAD model&quot; or &quot;wide-bandgap compatible sensing&quot; might require a CTO-level reader rather than a CEO.<\/li><\/ul>\n<h3><strong>Best Moments<\/strong><\/h3>\n<ul><li><strong>The ROI Argument:<\/strong> Framing the $750,000 investment as access to a <strong>$25 million research platform<\/strong> . This is the &quot;killer stat&quot; for an executive.<\/li><\/ul>\n<h3><strong>Likely Executive Reaction<\/strong><\/h3>\n<p>&quot;They clearly did their homework. They aren&#x27;t just asking for money; they&#x27;ve identified exactly where our new 800V sensors and Sense investment fit into the future of the grid. This looks like a strategic market-entry tool, not just a research fee.&quot;<\/p>\n<h2>---<\/h2>\n<p><strong>4\\. Individual Analysis of Document B<\/strong><\/p>\n<h3><strong>Main Strengths<\/strong><\/h3>\n<ul><li><strong>Clarity and Scannability:<\/strong> The &quot;Three Pillars&quot; structure (Flexible Interconnection, Grid Reliability, 800 V DC) is extremely easy to digest.<\/li><\/ul>\n<ul><li><strong>Market Language:<\/strong> Introduces &quot;Flex MOSAIC&quot; as a way to move flexibility from &quot;bespoke pilots to repeatable approvals,&quot; which appeals to ADI&#x27;s desire for scale.<\/li><\/ul>\n<h3><strong>Main Weaknesses<\/strong><\/h3>\n<ul><li><strong>Generic Packaging:<\/strong> Lacks the &quot;insider&quot; feel of Document A. It feels like a high-quality brochure that could be sent to any technology provider, despite mentioning ADI in the headers.<\/li><li><strong>Vague Next Steps:<\/strong> The proposal to join on &quot;standard membership terms&quot; is a bit passive compared to Document A’s technical scoping session.<\/li><\/ul>\n<h3><strong>Best Moments<\/strong><\/h3>\n<ul><li><strong>The Value Chain Visual:<\/strong> Positioning ADI across the &quot;full datacentertogrid value chain&quot; from &quot;physical assets to software-based orchestration&quot;.<\/li><\/ul>\n<h3><strong>Likely Executive Reaction<\/strong><\/h3>\n<p>&quot;This looks like a solid program with big-name partners. It makes sense for us to be there, but I’m not sure what the immediate technical win is. Let’s have the team look into it.&quot;<\/p>\n<h2>---<\/h2>\n<p><strong>5\\. Head-to-Head Comparison<\/strong><\/p>\n<ul><li><strong>Which better understands Analog Devices?<\/strong> <strong>Document A.<\/strong> It cites their specific M\\&amp;A activity and product series.<\/li><\/ul>\n<ul><li><strong>Which better explains DCFlex?<\/strong> <strong>Tie.<\/strong> Document B is slightly more &quot;visual&quot; and scannable, but Document A explains the <em>new<\/em> scope (Hardware Readiness) better.<\/li><\/ul>\n<ul><li><strong>Which better makes the business case?<\/strong> <strong>Document A.<\/strong> The &quot;Research Leverage&quot; and &quot;Market Credential&quot; arguments are much more compelling.<\/li><\/ul>\n<ul><li><strong>Which has the stronger executive ask?<\/strong> <strong>Document A.<\/strong> It asks for a &quot;technical scoping session&quot; to align on &quot;highest immediate priorities&quot;.<\/li><\/ul>\n<ul><li><strong>Which is more likely to result in a meeting?<\/strong> <strong>Document A.<\/strong> The level of customization makes it nearly impossible for a serious executive to ignore.<\/li><\/ul>\n<h2>---<\/h2>\n<p><strong>6\\. Final Winner and Rationale<\/strong><\/p>\n<p><strong>Winner: Document A<\/strong> <strong>Final Score: 94.8 / 100<\/strong> (Document B: 81.4) The <strong>13.4-point difference<\/strong> represents a <strong>decisive win<\/strong>. Document A succeeds because it treats ADI as a unique strategic partner rather than just another member. By aligning DCFlex workstreams with ADI&#x27;s actual product roadmap (800V DC, sensing, and grid edge intelligence), it transforms the &quot;cost&quot; of membership into a &quot;strategic investment&quot; in market validation.<\/p>\n<h2>---<\/h2>\n<p><strong>7\\. Recommended “Best Combined Version”<\/strong><\/p>\n<p>To create the ultimate pitch, take <strong>Document A<\/strong> as the core and integrate the following 5 improvements:<\/p>\n<ol><li><strong>Use Document B’s &quot;Three Pillars&quot;<\/strong> as a high-level visual summary on the first page to improve initial scannability.<\/li><\/ol>\n<ol><li><strong>Incorporate &quot;Flex MOSAIC&quot;<\/strong> branding from Document B to explain how ADI’s products will be &quot;classified&quot; for utilities.<\/li><\/ol>\n<ol><li><strong>Add Document B&#x27;s &quot;Initial Demo Sites&quot; map<\/strong> (if available as a graphic) to show the physical footprint of the project.<\/li><\/ol>\n<ol><li><strong>Shorten the &quot;About ADI&quot; section<\/strong> in Document A; ADI executives already know who they are. Use that space for the &quot;Strategic Value Chain&quot; narrative from Document B.<\/li><\/ol>\n<ol><li><strong>Bold the ROI:<\/strong> Make the &quot;$25M leverage for $750k&quot; the &quot;bottom line&quot; at the very beginning of the document.<\/li><\/ol>\n<h2>---<\/h2>\n<p><strong>8\\. Confidence Level<\/strong><\/p>\n<p><strong>Confidence: High.<\/strong> Document A contains specific, time-sensitive intelligence (April 30 calls, Jan 2026 M\\&amp;A) that creates a high degree of &quot;relevancy-resonance&quot; for an executive. Document B is professional but lacks the tactical &quot;hook&quot; required to move a high-level executive from &quot;interested&quot; to &quot;committed.&quot;<\/p>", "margin": 13.4}, "claude": {"label": "Claude Opus 4.7", "short": "Claude", "source": "Claude-analysis(1).md", "accent": "#ff9f43", "totalA": 86.4, "totalB": 55.05, "confidence": "High", "headline": "Document A wins decisively; Document B reads like a template with execution flaws.", "summary": "Claude delivered the widest margin. It emphasized that A treats ADI as a specific known prospect, with five concrete technical entry points and a named follow-up, while B suffers from generic personalization, a weak ask, typos, mixed spelling conventions, and a confusing euro-denominated fee for a US-headquartered company.", "bestA": ["Five engagement areas are commercially actionable.", "EPRI independence language builds trust.", "Named contacts and scoping-session ask make action easy."], "watchoutsA": ["Needs a one-page executive front door.", "Some pricing and CTA content is embedded too deeply.", "A few claims should be sourced or caveated."], "bestB": ["WS1–WS5 structure gives a fast mental model.", "Flex MOSAIC / Class X flexibility framing is genuinely useful.", "Cleaner top-line readability than A."], "watchoutsB": ["Generic personalization; could be swapped to another semiconductor firm.", "Multiple typos and phrasing issues hurt credibility.", "No named member ecosystem, timeline, or concrete next step."], "rows": [{"categoryId": 1, "aRaw": 9.0, "aWeighted": 10.8, "bRaw": 6.0, "bWeighted": 7.2, "winner": "A", "rationale": "A ties DCFlex to ADI's actual pivot to system-level solutions; B speaks in industry generalities."}, {"categoryId": 2, "aRaw": 9.5, "aWeighted": 9.5, "bRaw": 4.0, "bWeighted": 4.0, "winner": "A", "rationale": "A names AD777x, 800 VDC, Sense investment, and transformer monitoring; B is easily swappable."}, {"categoryId": 3, "aRaw": 8.0, "aWeighted": 9.6, "bRaw": 7.0, "bWeighted": 8.4, "winner": "A", "rationale": "B's WS1–WS5 frame and Flex MOSAIC are crisp; A is heavier but more complete."}, {"categoryId": 4, "aRaw": 9.0, "aWeighted": 10.8, "bRaw": 5.5, "bWeighted": 6.6, "winner": "A", "rationale": "A's five engagement areas are commercially actionable; B's value claims are abstract."}, {"categoryId": 5, "aRaw": 9.0, "aWeighted": 8.1, "bRaw": 4.0, "bWeighted": 3.6, "winner": "A", "rationale": "A proposes a scoping session, names E2/E3 as starts, and lists contacts."}, {"categoryId": 6, "aRaw": 9.0, "aWeighted": 9.0, "bRaw": 5.5, "bWeighted": 5.5, "winner": "A", "rationale": "A names 30+ member organizations and concrete EPRI capabilities; B asserts differentiation."}, {"categoryId": 7, "aRaw": 8.0, "aWeighted": 6.4, "bRaw": 5.5, "bWeighted": 4.4, "winner": "A", "rationale": "A creates a two-workstreams-for-one-fee timing hook; B has no urgency mechanism."}, {"categoryId": 8, "aRaw": 7.0, "aWeighted": 4.9, "bRaw": 5.5, "bWeighted": 3.85, "winner": "A", "rationale": "A is long but tight; B is shorter but typos undermine the executive register."}, {"categoryId": 9, "aRaw": 7.0, "aWeighted": 4.9, "bRaw": 6.5, "bWeighted": 4.55, "winner": "A", "rationale": "Close. B has a cleaner skeleton; A's tables and logical layering carry it."}, {"categoryId": 10, "aRaw": 9.0, "aWeighted": 4.5, "bRaw": 5.0, "bWeighted": 2.5, "winner": "A", "rationale": "A has contacts, pricing, ecosystem context, and prior-call reference; B is missing these."}, {"categoryId": 11, "aRaw": 9.0, "aWeighted": 4.5, "bRaw": 4.5, "bWeighted": 2.25, "winner": "A", "rationale": "B has multiple typos, mixed UK/US English, a duplicated phrase, and awkward currency."}, {"categoryId": 12, "aRaw": 8.5, "aWeighted": 3.4, "bRaw": 5.5, "bWeighted": 2.2, "winner": "A", "rationale": "A demonstrates effort that itself is relationship capital; B reads as templated."}], "fullHtml": "<p>Both documents have been extracted. Before I begin the rubric evaluation, let me verify a few of the factual claims in Document A about Analog Devices, since the personalization quality hinges on whether those claims are accurate.I&#x27;ve now read both documents in full and verified the most consequential factual claims (the August 2025 ADI 800 VDC announcement and the January 2026 Sense investment are both confirmed in current public sources). Below is the full evaluation.<\/p>\n<hr>\n<h1>Executive Communication Evaluation: EPRI DCFlex Outreach to Analog Devices<\/h1>\n<h2>1. Executive Summary<\/h2>\n<p><strong>Document A wins decisively<\/strong> — by roughly 31 points on a 100-point scale. It is dramatically better personalized, more credible, and has a far more actionable executive ask. The two documents are genuinely playing different games: Document A is a research-grade engagement brief that treats ADI as a specific, known prospect with five concrete technical entry points and a named follow-up step. Document B is a generic membership pitch with ADI&#x27;s name inserted in slots — and its credibility is further damaged by repeated typos, grammatical errors, an inconsistent &quot;data centre / data center&quot; usage, a duplicated &quot;to to&quot; phrase, and a currency choice (€) that is awkward for a US-headquartered company.<\/p>\n<p>If the goal is to motivate an ADI executive to take a meeting and seriously evaluate DCFlex membership, Document A is the package that actually does that work. Document B reads like a template that a sharp executive would forward to a junior staffer with a one-line &quot;what is this?&quot; note.<\/p>\n<p>The <strong>summary verdict<\/strong>: Document A is not just better written — it is a fundamentally more sophisticated piece of executive engagement. Document B&#x27;s structural framing (three pillars, five workstreams, Flex MOSAIC as &quot;Class X flexibility&quot;) contains worthwhile material that should be harvested into the winning package, but as a standalone outreach instrument it is not ready.<\/p>\n<hr>\n<h2>2. Scorecard<\/h2>\n<div class=\"table-scroll\"><table class=\"md-table\"><thead><tr><th>#<\/th><th>Category<\/th><th>Wt<\/th><th>A raw<\/th><th>A wtd<\/th><th>B raw<\/th><th>B wtd<\/th><th>Winner<\/th><th>Brief Rationale<\/th><\/tr><\/thead><tbody>\n<tr><td>1<\/td><td>Executive relevance &amp; strategic fit<\/td><td>12<\/td><td>9.0<\/td><td>10.8<\/td><td>6.0<\/td><td>7.2<\/td><td><strong>A<\/strong><\/td><td>A ties DCFlex to ADI&#x27;s actual pivot to system-level solutions; B speaks in industry generalities.<\/td><\/tr>\n<tr><td>2<\/td><td>ADI-specific personalization &amp; insight<\/td><td>10<\/td><td>9.5<\/td><td>9.5<\/td><td>4.0<\/td><td>4.0<\/td><td><strong>A<\/strong><\/td><td>A names AD777x, 800 VDC announcement, Sense investment, transformer-monitoring acquisition; B contains nothing ADI-specific that couldn&#x27;t be swapped to another sensor company.<\/td><\/tr>\n<tr><td>3<\/td><td>Clarity of the DCFlex value proposition<\/td><td>12<\/td><td>8.0<\/td><td>9.6<\/td><td>7.0<\/td><td>8.4<\/td><td><strong>A<\/strong><\/td><td>B&#x27;s WS1–WS5 frame and Flex MOSAIC are crisp; A is heavier but more complete (members, scope, $25M scale).<\/td><\/tr>\n<tr><td>4<\/td><td>Business case &amp; value to ADI<\/td><td>12<\/td><td>9.0<\/td><td>10.8<\/td><td>5.5<\/td><td>6.6<\/td><td><strong>A<\/strong><\/td><td>A&#x27;s five engagement areas are commercially actionable; B&#x27;s value claims are abstract.<\/td><\/tr>\n<tr><td>5<\/td><td>Specificity of the ask &amp; next steps<\/td><td>9<\/td><td>9.0<\/td><td>8.1<\/td><td>4.0<\/td><td>3.6<\/td><td><strong>A<\/strong><\/td><td>A proposes a scoping session, names E2/E3 as starts, lists named contacts; B says &quot;join the programme.&quot;<\/td><\/tr>\n<tr><td>6<\/td><td>Credibility, evidence, substantiation<\/td><td>10<\/td><td>9.0<\/td><td>9.0<\/td><td>5.5<\/td><td>5.5<\/td><td><strong>A<\/strong><\/td><td>A names 30+ member organizations and concrete EPRI capabilities; B asserts differentiation without proof.<\/td><\/tr>\n<tr><td>7<\/td><td>Persuasiveness, differentiation, urgency<\/td><td>8<\/td><td>8.0<\/td><td>6.4<\/td><td>5.5<\/td><td>4.4<\/td><td><strong>A<\/strong><\/td><td>A creates a &quot;two workstreams for one fee&quot; timing hook; B has no urgency mechanism.<\/td><\/tr>\n<tr><td>8<\/td><td>Executive tone &amp; concision<\/td><td>7<\/td><td>7.0<\/td><td>4.9<\/td><td>5.5<\/td><td>3.85<\/td><td><strong>A<\/strong><\/td><td>A is long but tight; B is shorter but typos undermine the executive register.<\/td><\/tr>\n<tr><td>9<\/td><td>Structure, flow, readability<\/td><td>7<\/td><td>7.0<\/td><td>4.9<\/td><td>6.5<\/td><td>4.55<\/td><td><strong>A<\/strong><\/td><td>Close. B has cleaner skeleton; A&#x27;s tables and logical layering carry it.<\/td><\/tr>\n<tr><td>10<\/td><td>Package completeness<\/td><td>5<\/td><td>9.0<\/td><td>4.5<\/td><td>5.0<\/td><td>2.5<\/td><td><strong>A<\/strong><\/td><td>A has contacts, pricing, ecosystem context, prior-call reference; B is missing all of these.<\/td><\/tr>\n<tr><td>11<\/td><td>Risk mgmt, accuracy, professionalism<\/td><td>5<\/td><td>9.0<\/td><td>4.5<\/td><td>4.5<\/td><td>2.25<\/td><td><strong>A<\/strong><\/td><td>B has multiple typos, mixed UK/US English, &quot;to to&quot; duplication, € for a US company.<\/td><\/tr>\n<tr><td>12<\/td><td>Memorability &amp; relationship-building<\/td><td>4<\/td><td>8.5<\/td><td>3.4<\/td><td>5.5<\/td><td>2.2<\/td><td><strong>A<\/strong><\/td><td>A demonstrates effort that itself is relationship capital; B reads as templated.<\/td><\/tr>\n<tr><td><\/td><td><strong>TOTAL<\/strong><\/td><td><strong>100<\/strong><\/td><td><\/td><td><strong>86.4<\/strong><\/td><td><\/td><td><strong>55.05<\/strong><\/td><td><strong>A<\/strong><\/td><td>31.35-point margin → decisive<\/td><\/tr>\n<\/tbody><\/table><\/div>\n<hr>\n<h2>3. Document A — Individual Analysis<\/h2>\n<h3>Main strengths<\/h3>\n<p><strong>Personalization is the standout asset.<\/strong> A reads as if the author has spent serious time inside ADI&#x27;s investor materials and recent press releases. It correctly cites the August 2025 800 VDC announcement (verified), the January 2026 Sense investment (verified), the transformer condition monitoring acquisition, and ADI&#x27;s AD777x power-quality measurement series — and, more importantly, it weaves these into a credible narrative about ADI&#x27;s strategic transition from component supplier to system-level solutions. That narrative aligns with how ADI itself describes its strategy in 2026 (&quot;Intelligent Edge,&quot; moving from components to insights).<\/p>\n<p><strong>Five engagement areas (E1–E5) are the operational core.<\/strong> Each links a specific ADI capability to a specific DCFlex research need: 800 VDC sensing (E1), UPS DC-bus sensing against EPRI&#x27;s waveform library (E2), transformer / SST monitoring tied to EPRI&#x27;s PTX platform (E3), power quality at the point of common coupling (E4), and micro data center sensing (E5). These are substantive enough that an ADI engineering executive could route the document to specific business-unit leaders and get useful technical reactions back.<\/p>\n<p><strong>Honest framing of EPRI&#x27;s role.<\/strong> The &quot;EPRI does not advocate for ADI technologies&quot; callout is unusual and credibility-positive. It pre-empts the most predictable executive objection — &quot;are you going to push our products in disguise?&quot; — by stating the answer plainly. This is the kind of disclosure that <em>increases<\/em> trust rather than decreasing it.<\/p>\n<p><strong>The ask is properly engineered.<\/strong> A specific scoping session, two suggested entry points (E2 and E3), named contacts with email addresses, and a coordinated reference to the parallel OPAI / Mansoor / Satki conversation. This is what an executive needs to hand to a chief of staff and have the meeting on the calendar within a week.<\/p>\n<p><strong>The &quot;two workstreams for one membership&quot; framing<\/strong> is the strongest structural sales hook in the document. It creates a real timing-based asymmetry: ADI joining now gets the Hardware Readiness Framework expansion at no additional cost, which existing members got the same way. That is a defensible urgency claim, not manufactured pressure.<\/p>\n<h3>Main weaknesses<\/h3>\n<p><strong>Length and front-loading.<\/strong> The most powerful content — the five engagement areas — sits roughly in the middle of the document, behind the &quot;About ADI&quot; and &quot;About DCFlex&quot; sections. A senior executive who reads the first page and stops there would miss the strongest material. A one-paragraph executive summary at the very top, before &quot;About Analog Devices,&quot; would mitigate this.<\/p>\n<p><strong>The &quot;About Analog Devices&quot; section risks reading as patronizing.<\/strong> Telling Analog Devices about Analog Devices is a delicate move. The information is accurate and well-curated, but a CEO/COO/CTO already knows their own company&#x27;s recent moves. Reframing the section as &quot;Why ADI&#x27;s strategic position aligns with DCFlex&quot; — i.e., interpretation rather than recitation — would land better.<\/p>\n<p><strong>Pricing is embedded rather than properly framed.<\/strong> The $750K appears in two places: once mid-document inside the Research Leverage section, and again under Membership. A clean executive package would isolate the commercial terms and pair them with an unambiguous total cost of ownership and a benefit summary in the same view.<\/p>\n<p><strong>The closing is a single dense paragraph rather than a clean call-to-action block.<\/strong> The proposed next step is buried inside a paragraph that also references the OPAI conversation. A standalone CTA box (&quot;Next step: 60-minute scoping call in next 30 days, suggested attendees, suggested agenda&quot;) would be more actionable.<\/p>\n<p><strong>&quot;Confidential&quot; marking is somewhat performative<\/strong> — most of the material is publicly available. Not a serious problem, but it&#x27;s the kind of small inconsistency that more disciplined documents avoid.<\/p>\n<h3>Best moments<\/h3>\n<ul><li>The E2 (UPS DC bus) section: cites EPRI&#x27;s waveform library, sub-millisecond resolution, and the explicit gap that no independent benchmarks exist for AI-factory load profiles. This is the single most technically convincing passage in either document.<\/li><li>The member table with 30+ named utilities, hyperscalers, ISOs and OEMs — converts an abstract &quot;ecosystem&quot; claim into a verifiable buyer list ADI&#x27;s commercial team would recognize.<\/li><li>The EPRI independence callout — counterintuitive credibility move that lands well.<\/li><li>&quot;$750K membership = participation in a $25M collaborative research program&quot; — strong value-leverage framing.<\/li><\/ul>\n<h3>Missing or underdeveloped elements<\/h3>\n<ul><li><strong>No one-page summary.<\/strong> A document this rich needs a 200-word top sheet for the executive who will not read 5,000 words.<\/li><li><strong>No quantified ROI.<\/strong> What is the dollar value to ADI of (a) faster sensing-product validation cycles, (b) reduced cost of getting on utility approved-vendor lists, (c) influence over emerging 800 VDC sensing standards? Even rough order-of-magnitude estimates would strengthen the business case.<\/li><li><strong>No competitive context.<\/strong> TI, Infineon, STMicro, ROHM, and others are also engaged in the 800 VDC ecosystem (verified). The risk of <em>not<\/em> joining DCFlex while competitors do is not made explicit. This is a missed urgency lever.<\/li><li><strong>No supporting cover email or short cover letter.<\/strong> The package would be stronger as a 3-tier asset: (1) 200-word email; (2) 1-page exec summary; (3) the current document as the deep-dive attachment.<\/li><li><strong>No mention of ADI&#x27;s Ireland / European footprint<\/strong> despite EPRI&#x27;s evident European engagement (Document B&#x27;s € pricing implies it). ADI is dual-headquartered in Wilmington MA and Limerick Ireland. A line acknowledging that DCFlex&#x27;s reach includes European utilities (RTE, RWE, NESO, KEPCO) would resonate.<\/li><\/ul>\n<h3>Risks or concerns<\/h3>\n<ul><li>The depth of ADI-specific information is so detailed that an ADI executive may ask &quot;where did you get this?&quot; If the answer is &quot;public sources only,&quot; the document should say so. If any came from the April 30 call, the document should be careful about confidentiality on ADI&#x27;s end.<\/li><li>The reference to &quot;the prior conversation between Arshad Mansoor and Apurba Satki regarding the Open Power AI Consortium&quot; is dropped at the end with no context. An executive unfamiliar with that thread may find it oddly placed.<\/li><li>Saying &quot;research findings will be published completely and accurately regardless of outcome — including limitations and conditions under which performance falls short of specifications&quot; is honest but is <em>also<\/em> a risk an ADI executive will think about. A line acknowledging the standard EPRI process for technology developers to review draft findings would soften this.<\/li><\/ul>\n<h3>Likely executive reaction<\/h3>\n<p>A technical executive (CTO, head of engineering, GM of a power business unit) would react positively — this is the kind of document that earns a meeting. A non-technical executive (CEO, CFO) would likely route the document to a technical lead with a &quot;give me your read on this&quot; note within 48 hours, which is itself a successful outcome. The dominant emotional reaction is <em>&quot;these people did their homework&quot;<\/em> — which is exactly what an outreach package needs to produce.<\/p>\n<h3>Specific recommendations to improve<\/h3>\n<ol><li><strong>Add a 200-word executive summary at the top<\/strong> with the three-line ask, the two workstreams hook, and the named next step.<\/li><li><strong>Convert &quot;About Analog Devices&quot; into &quot;Why ADI&#x27;s 2025–2026 Strategic Moves Map to DCFlex&quot;<\/strong> — same content, framed as interpretation.<\/li><li><strong>Pull the pricing into a clean commercial-terms box on page 2<\/strong>, not embedded in narrative.<\/li><li><strong>Add a 3–4 line competitive context paragraph<\/strong>: &quot;Other 800 VDC ecosystem participants — TI, Infineon, ST, ROHM — are increasingly visible in independent research forums. DCFlex membership ensures ADI&#x27;s sensing voice is in the room when assessment protocols are written.&quot;<\/li><li><strong>Add a ~$ ROI estimate<\/strong> even if directional (e.g., &quot;Independent EPRI validation typically reduces utility procurement evaluation cycles by N–M months&quot;).<\/li><li><strong>Convert the closing paragraph into a CTA block<\/strong> with proposed dates and attendee list.<\/li><li><strong>Run a final pass to ensure the OPAI / Mansoor reference is properly contextualized<\/strong> or move it to a separate appendix-style note.<\/li><\/ol>\n<hr>\n<h2>4. Document B — Individual Analysis<\/h2>\n<h3>Main strengths<\/h3>\n<p><strong>The DCFlex platform structure is well-articulated.<\/strong> The WS1–WS5 framework gives the reader a fast mental model of what DCFlex does. This is the single piece of structural framing in either document that A could borrow.<\/p>\n<p><strong>The Flex MOSAIC &quot;Class X flexibility&quot; framing.<\/strong> The idea that ADI products, platforms, and services can be described as delivering &quot;Class X flexibility, understood consistently by utilities, developers, and regulators worldwide&quot; is a memorable hook — it converts a technical classification into a market-language asset. This is genuinely smart positioning that A does not have.<\/p>\n<p><strong>Cleaner top-line readability.<\/strong> The three pillars (01, 02, 03) and the headers like &quot;Demonstrations: Proving Flexibility in Practice&quot; give the document a magazine-style scannability that A&#x27;s denser layout lacks. An executive who reads only headers gets a recognizable shape.<\/p>\n<p><strong>The &quot;Why This Matters for Analog Devices&#x27; Strategy&quot; closer<\/strong> has the strongest standalone strategic paragraph of either document: *&quot;The winners will not be point-solution providers, but organizations that can bridge grid operations and customer systems, translate flexibility commitments into trusted electrical behavior, make high-density loads compatible with constrained grids, and do so at scale across different regulatory regimes.&quot;* That is well-written and would resonate with an ADI executive thinking about strategic positioning.<\/p>\n<h3>Main weaknesses<\/h3>\n<p><strong>Generic personalization.<\/strong> The document repeatedly says &quot;ADI&#x27;s portfolio is positioned across all three layers&quot; or &quot;Analog Devices&#x27; offerings are aligned with the needs of both facility owners and grid operators&quot; — claims that are true but evidence-free. Nowhere does B name a specific ADI product, technology, business unit, recent acquisition, or strategic announcement. A side-by-side test: replace &quot;Analog Devices&quot; with &quot;Texas Instruments&quot; or &quot;Infineon&quot; throughout B, and almost no sentence would need to change. That is the operational definition of unpersonalized.<\/p>\n<p><strong>Multiple writing-quality errors that an executive will notice.<\/strong> A non-exhaustive list:<\/p>\n<ul><li>&quot;the common challenges of <strong>brining<\/strong> power to data centre load&quot; — typo for &quot;bringing&quot;<\/li><li>&quot;from physical datacenter electrification assets <strong>to to<\/strong> software-based orchestration&quot; — duplicated word<\/li><li>&quot;<strong>datacentertogrid<\/strong>&quot; rendered without separators in one place, properly hyphenated elsewhere<\/li><li>Inconsistent usage of &quot;data centre&quot; (UK) and &quot;data center&quot; (US), sometimes within the same sentence cluster<\/li><li>&quot;<strong>control as well as assets<\/strong>, define flexibility&quot; — missing or misplaced subject<\/li><li>&quot;These learnings compound the growth from existing project partners and Analog Devices&#x27; partners&quot; — sentence appears to be missing its predicate<\/li><li>&quot;Forthcoming DCFlex demonstrations will pilot and test the equipment that makes this architecture viable, supporting an improved understanding...&quot; — passive and abstract<\/li><li>Mixed straight and curly apostrophes<\/li><\/ul>\n<p><strong>Currency choice is jarring for the audience.<\/strong> &quot;Annual fee €250,000&quot; is correct for an EPRI Europe instrument but odd for a US-headquartered company. Even assuming ADI&#x27;s Limerick presence justifies it, this is the kind of small choice that reads as &quot;this was originally drafted for someone else.&quot;<\/p>\n<p><strong>The ask is non-specific.<\/strong> &quot;We propose Analog Devices join the programme on the standard membership terms.&quot; There is no named contact, no proposed meeting, no identification of which workstream(s) ADI should engage first, and no mention of any prior conversation. From an executive throughput standpoint, the document tells the reader to make all the next decisions themselves.<\/p>\n<p><strong>No member ecosystem named.<\/strong> The document asserts that DCFlex has &quot;members drawn from the world&#x27;s leading utilities, grid operators, hyperscale data center operators, and technology providers&quot; — but lists none of them. Compare to A, which names 30+. The credibility delta is large: B asks the reader to take EPRI&#x27;s word for it.<\/p>\n<p><strong>No timeline or program scale.<\/strong> B does not say when DCFlex started, when it ends, how many members it has, or how much it has raised. A reader cannot judge whether this is a $5M boutique program or a $25M flagship.<\/p>\n<h3>Best moments<\/h3>\n<ul><li>The &quot;Why this matters for ADI&#x27;s strategy&quot; paragraph (quoted above).<\/li><li>The Flex MOSAIC &quot;Class X flexibility&quot; market-language framing.<\/li><li>The WS1–WS5 structure as a teaching device.<\/li><li>&quot;Flexibility only counts if it is operable&quot; — a well-turned phrase that captures EPRI&#x27;s positioning sharply.<\/li><\/ul>\n<h3>Missing or underdeveloped elements<\/h3>\n<ul><li>Any reference to ADI-specific technologies, products, recent moves, or strategic announcements<\/li><li>Any named contact or proposed next-step meeting<\/li><li>Any program-scale information (members, dollars, timeline)<\/li><li>Any acknowledgment of prior EPRI–ADI conversations<\/li><li>Any cover email or accompanying letter<\/li><li>Any quantified value claim<\/li><li>Any list of named members<\/li><\/ul>\n<h3>Risks or concerns<\/h3>\n<ul><li><strong>Typographical errors in an outreach to a Fortune 500 semiconductor company are a real reputational issue.<\/strong> ADI&#x27;s culture is engineering-rigorous; visible carelessness in the package implies likely carelessness in the research itself. This is the most significant risk factor in B.<\/li><li><strong>The Euro pricing without commentary<\/strong> invites the question &quot;is this how EPRI thinks about ADI — as a European-region partner?&quot; If EPRI&#x27;s intent is global engagement with ADI, the pricing presentation should reflect that.<\/li><li><strong>Generic claims like &quot;no other initiative brings together credible utility participation, live demonstrations, and a technology-neutral classification framework&quot;<\/strong> are unsupported and easily disputed (DOE OE programs, IEC TC 57 working groups, and the Open Compute Project are obvious comparators). Asserted differentiation without evidence weakens trust.<\/li><\/ul>\n<h3>Likely executive reaction<\/h3>\n<p>A senior ADI executive reading B without A as a reference would likely respond politely but non-committally. The package would not be offensive — it would just not be compelling enough to displace any of the dozen other inbound consortium and partnership requests an executive at this level receives weekly. The typos and currency choice would prompt the recipient to ask a junior staffer to &quot;find out who wrote this and what they actually want.&quot; Probability of a meeting: meaningfully lower than for A.<\/p>\n<h3>Specific recommendations to improve<\/h3>\n<ol><li><strong>Run a complete proofreading pass.<\/strong> The typos in B are not stylistic — they are correctable errors that should not have left the building.<\/li><li><strong>Write three to five paragraphs of genuine ADI-specific personalization<\/strong> referencing the 800 VDC announcement, Sense investment, transformer monitoring, AD777x family, and the August 2025 / January 2026 strategic moves.<\/li><li><strong>Add a named contact and a specific next-step meeting proposal<\/strong> with two or three suggested dates.<\/li><li><strong>Reconcile the currency choice<\/strong> — either pair € with USD equivalent, or present terms in USD given ADI&#x27;s HQ.<\/li><li><strong>Add a member ecosystem table<\/strong> even if abbreviated — naming Google, Meta, Microsoft, NVIDIA, PG&amp;E, Southern, AEP, Duke, and so on converts the credibility claim into a verifiable list.<\/li><li><strong>Add a one-paragraph &quot;what changed in DCFlex in 2026&quot;<\/strong> to create urgency, paralleling A&#x27;s two-workstreams hook.<\/li><li><strong>Quantify the program<\/strong> — members, dollars, year range — in three lines somewhere on page 1.<\/li><\/ol>\n<hr>\n<h2>5. Head-to-Head Comparison<\/h2>\n<div class=\"table-scroll\"><table class=\"md-table\"><thead><tr><th>Dimension<\/th><th>Winner<\/th><th>Margin<\/th><\/tr><\/thead><tbody>\n<tr><td>Which better understands Analog Devices?<\/td><td><strong>A<\/strong><\/td><td>Wide. A demonstrates current, specific knowledge of ADI&#x27;s 2025–2026 strategic moves; B speaks in generalities.<\/td><\/tr>\n<tr><td>Which better explains DCFlex?<\/td><td><strong>Mixed → A overall<\/strong><\/td><td>B&#x27;s WS1–WS5 framework is crisper; A&#x27;s combination of workstreams + members + assessment framework + program scale is more complete.<\/td><\/tr>\n<tr><td>Which better makes the business case?<\/td><td><strong>A<\/strong><\/td><td>Wide. Five concrete engagement areas with technical and commercial logic vs. B&#x27;s abstract value claims.<\/td><\/tr>\n<tr><td>Which has the stronger executive ask?<\/td><td><strong>A<\/strong><\/td><td>Wide. Specific scoping session, named entry points, named contacts vs. &quot;join the programme.&quot;<\/td><\/tr>\n<tr><td>Which is more persuasive?<\/td><td><strong>A<\/strong><\/td><td>Substantial. A creates real urgency (two workstreams hook) and supports differentiation with named members; B asserts differentiation.<\/td><\/tr>\n<tr><td>Which is more polished?<\/td><td><strong>A<\/strong><\/td><td>A is long but error-free. B has multiple typos, grammatical issues, and inconsistent UK/US English.<\/td><\/tr>\n<tr><td>Which is more likely to result in a meeting or engagement?<\/td><td><strong>A<\/strong><\/td><td>Wide. A is engineered to produce a meeting; B requires the reader to do most of the next-step work themselves.<\/td><\/tr>\n<\/tbody><\/table><\/div>\n<p>A is the stronger document on every axis except a narrow stylistic edge to B on top-line scannability. That single edge is not enough to compensate for B&#x27;s deficits in personalization, credibility, ask specificity, and basic proofreading.<\/p>\n<hr>\n<h2>6. Final Winner and Rationale<\/h2>\n<p><strong>Winner: Document A.<\/strong><\/p>\n<p>Final scores: <strong>Document A — 86.4 / 100. Document B — 55.05 / 100. Margin: 31.35 points.<\/strong><\/p>\n<p>This is <strong>decisive<\/strong> by the rubric&#x27;s own definition (&gt;10-point difference). The margin is not a stylistic preference; it reflects a structural quality gap. Document A is doing the work that an executive outreach package is supposed to do — researching the prospect, mapping their actual capabilities to the offering, providing evidence, and engineering an obvious next step. Document B is performing the <em>shape<\/em> of an executive package without the underlying preparation.<\/p>\n<p>Were Document B free of typos and currency awkwardness, it would still lose — just by a slightly smaller margin. The personalization gap and the ask gap alone are sufficient to determine the outcome.<\/p>\n<hr>\n<h2>7. Recommended &quot;Best Combined Version&quot;<\/h2>\n<p>The strongest possible package would use <strong>Document A as the spine<\/strong> and harvest specific elements from B.<\/p>\n<p><strong>Take from Document A<\/strong> (essentially the whole document, restructured):<\/p>\n<ul><li>The five engagement areas E1–E5<\/li><li>The ADI-specific personalization<\/li><li>The full member ecosystem table<\/li><li>The three-level assessment framework<\/li><li>The two-workstreams-for-one-membership hook<\/li><li>The EPRI independence callout<\/li><li>The named-contact closing<\/li><li>The pricing options<\/li><\/ul>\n<p><strong>Take from Document B<\/strong>:<\/p>\n<ul><li>The WS1–WS5 workstream framework (cleaner than A&#x27;s two-workstream framing for explaining the <em>internal<\/em> structure of DCFlex)<\/li><li>The Flex MOSAIC &quot;Class X flexibility&quot; market-language hook — this is genuinely a stronger commercial framing than anything in A<\/li><li>The &quot;flexibility only counts if it is operable&quot; line and the broader &quot;Operationalizing Flexibility: From Classification to Dispatch&quot; framing<\/li><li>The strategic-positioning paragraph from &quot;Why This Matters for ADI&#x27;s Strategy&quot; — the prose is sharper than A&#x27;s equivalent<\/li><\/ul>\n<h3>Top 5 improvements to the winning package<\/h3>\n<ol><li><strong>Add a one-page executive summary<\/strong> at the very front (200 words max): the ask, the value, the urgency, the next step. The current A document buries its strongest material at depth.<\/li><li><strong>Add a three-line ROI / value-quantification section<\/strong> — even directional (&quot;EPRI validation has historically compressed utility approved-vendor evaluations by X–Y months for sensing technologies&quot;). The current A is rich on logic but light on numbers.<\/li><li><strong>Add a brief competitive context paragraph<\/strong> noting that TI, Infineon, ST, ROHM, and other ADI peers are visibly active in the 800 VDC ecosystem — without explicit competitor-bashing, this creates legitimate urgency.<\/li><li><strong>Consolidate the pricing and commercial terms into a clean stand-alone box on page 2.<\/strong> Pull the $750K out of the Research Leverage paragraph; pair it with a simple &quot;what&#x27;s included&quot; list adjacent to the dollar figure. Resolve the USD/EUR question in favor of USD given ADI&#x27;s Wilmington HQ, with a footnote on Limerick.<\/li><li><strong>Build a 3-tier asset stack rather than one document<\/strong>: (a) ~150-word cover email to the executive sponsor; (b) 1-page executive summary; (c) the full briefing document as attachment. This lets the package work for both the CEO who skims and the technical VP who deep-reads.<\/li><\/ol>\n<hr>\n<h2>8. Confidence Level<\/h2>\n<p><strong>High confidence.<\/strong> The gap between the two documents is wide enough that small calibration differences in any single rubric category would not change the outcome. Even under the most charitable reading of B and the most critical reading of A, A wins by at least 20 points.<\/p>\n<p><strong>What would change the assessment:<\/strong><\/p>\n<ul><li><em>If Document B has an unseen accompanying cover letter or email<\/em> that contains the ADI-specific personalization and the named ask, B&#x27;s score would rise meaningfully — perhaps 8–12 points — though probably not enough to overtake A. The package as presented is what was scored.<\/li><li><em>If Document A&#x27;s specific factual claims about ADI were incorrect<\/em>, its personalization advantage would collapse. I verified the two most consequential claims (August 2025 800 VDC and January 2026 Sense investment) against current public sources; both are accurate. The remaining ADI-specific claims (transformer monitoring acquisition, AD777x specifications, the IEC 61000-4-30 Class A reference) are consistent with ADI&#x27;s published technical materials and are plausible.<\/li><li><em>If the ADI executive audience is a CEO or CFO rather than a technical executive<\/em>, Document A&#x27;s depth becomes a liability and Document B&#x27;s brevity becomes more attractive. Even in that scenario, however, B&#x27;s typos, generic personalization, and weak ask would likely still cost it the meeting. The right answer in that scenario is not &quot;use B&quot; but &quot;use A with an added 1-page executive summary on top&quot; — which is recommendation #1 above.<\/li><\/ul>\n<p>The judgment that A is the better outreach package is robust to all reasonable variations in audience, weighting, and interpretive charity.<\/p>", "margin": 31.35}, "chatgpt": {"label": "ChatGPT 5.5 Pro", "short": "ChatGPT", "source": "ChatGPT-analysis(1).md", "accent": "#00e0a4", "totalA": 81.05, "totalB": 67.6, "confidence": "High", "headline": "Document A wins, but the best final package should borrow B’s executive structure.", "summary": "ChatGPT scored the contest as a decisive A win, while giving B meaningful credit for clearer DCFlex explanation, executive concision, and readability. It stressed that A answers the critical executive question — why this matters to ADI specifically — but needs a sharper two-page front end, source notes, and quantified value.", "bestA": ["Strong ADI-specific strategic mapping across sensing, power, 800 VDC, grid edge, UPS, transformers, and power quality.", "Clearer value to ADI: validation, ecosystem access, standards awareness, and market credentialing.", "Better next step: a follow-up technical scoping session."], "watchoutsA": ["Too dense for CEO/CFO first read.", "High-impact claims need visible sourcing.", "Economic value remains mostly qualitative."], "bestB": ["Best high-level DCFlex explanation through workstreams, Flex MOSAIC, and demonstrations.", "More executive-scannable and visually polished.", "Strong strategic-language closer."], "watchoutsB": ["Not personalized enough to ADI.", "Weak ask: jumps to membership rather than an intermediate briefing/scoping step.", "Typos, inconsistent data center spelling, and fee/currency issues."], "rows": [{"categoryId": 1, "aRaw": 9.0, "aWeighted": 10.8, "bRaw": 7.5, "bWeighted": 9.0, "winner": "A", "rationale": "A ties DCFlex directly to ADI’s AI data center, grid, sensing, power monitoring, 800 VDC, UPS, transformer, and power-quality priorities."}, {"categoryId": 2, "aRaw": 9.0, "aWeighted": 9.0, "bRaw": 5.5, "bWeighted": 5.5, "winner": "A", "rationale": "A shows deep ADI-specific tailoring; B has not enough product or business specificity."}, {"categoryId": 3, "aRaw": 8.0, "aWeighted": 9.6, "bRaw": 8.5, "bWeighted": 10.2, "winner": "B", "rationale": "B explains DCFlex more simply through workstreams, Flex MOSAIC, and demonstrations."}, {"categoryId": 4, "aRaw": 8.5, "aWeighted": 10.2, "bRaw": 6.5, "bWeighted": 7.8, "winner": "A", "rationale": "A identifies market credentialing, ecosystem access, standards awareness, validation, and specific pathways."}, {"categoryId": 5, "aRaw": 8.5, "aWeighted": 7.65, "bRaw": 5.5, "bWeighted": 4.95, "winner": "A", "rationale": "A proposes a technical scoping session and identifies likely starting areas."}, {"categoryId": 6, "aRaw": 7.0, "aWeighted": 7.0, "bRaw": 5.5, "bWeighted": 5.5, "winner": "A", "rationale": "A has more concrete evidence and logic but needs source notes for major claims."}, {"categoryId": 7, "aRaw": 8.0, "aWeighted": 6.4, "bRaw": 6.5, "bWeighted": 5.2, "winner": "A", "rationale": "A creates urgency through expanded access, member ecosystem, research leverage, and near-term validation."}, {"categoryId": 8, "aRaw": 6.5, "aWeighted": 4.55, "bRaw": 7.5, "bWeighted": 5.25, "winner": "B", "rationale": "B is easier for an executive to skim; A is too dense for a first outreach package."}, {"categoryId": 9, "aRaw": 7.0, "aWeighted": 4.9, "bRaw": 8.0, "bWeighted": 5.6, "winner": "B", "rationale": "B has clearer visual hierarchy; A is overloaded and does not lead hard enough with the decision case."}, {"categoryId": 10, "aRaw": 8.5, "aWeighted": 4.25, "bRaw": 6.5, "bWeighted": 3.25, "winner": "A", "rationale": "A includes business rationale, technical paths, ecosystem, fees, EPRI role, and next step."}, {"categoryId": 11, "aRaw": 7.0, "aWeighted": 3.5, "bRaw": 5.5, "bWeighted": 2.75, "winner": "A", "rationale": "A has some overclaiming/source risk; B has typos, broad unsupported claims, and weaker factual/professional finish."}, {"categoryId": 12, "aRaw": 8.0, "aWeighted": 3.2, "bRaw": 6.5, "bWeighted": 2.6, "winner": "A", "rationale": "A feels like a serious follow-up with relationship continuity and tailored opportunities."}], "fullHtml": "<h2>1. Executive summary<\/h2>\n<p><strong>Winner: Document A.<\/strong> Document A is materially more likely to persuade an Analog Devices executive to engage with EPRI’s DCFlex initiative because it does the hardest executive-communications work: it connects DCFlex to ADI’s actual strategic terrain, maps ADI technologies to concrete DCFlex research opportunities, explains what ADI would gain, and proposes a specific follow-up scoping session. Document B is cleaner, more visually executive-friendly, and better as a short strategic brochure, but it is too generic, under-evidenced, and weak on next steps.<\/p>\n<p><strong>Final score:<\/strong> Document A: <strong>81.05 / 100<\/strong>. Document B: <strong>67.60 / 100<\/strong>. The <strong>13.45-point margin<\/strong> is a <strong>decisive win<\/strong> under your scoring interpretation.<\/p>\n<p>Externally, the ADI strategic context strongly favors a package that speaks to AI data center power, high-voltage architectures, grid-edge intelligence, power quality, sensing, control, and energy management. ADI’s FY2025 annual report emphasizes energy and data centers, Intelligent Edge, R&amp;D, software/digital/AI, and partnership-driven innovation; its executive commentary also describes AI data center power management as a system-level differentiator as customers migrate to higher-voltage architectures.  ADI has publicly announced support for NVIDIA’s 800 VDC data center power architecture, and Sense announced a strategic investment from ADI to advance grid-edge intelligence. ([Analog Devices][1]) DCFlex’s public positioning is also centered on time-to-power, grid reliability, data center flexibility, Flex MOSAIC, and multi-stakeholder collaboration. ([DCFleX][2]) Document A addresses that context far more specifically than Document B.<\/p>\n<h2>2. What each package appears to contain<\/h2>\n<p><strong>Document A<\/strong> is a detailed research-partnership invitation and technical/executive briefing. It appears to be a long-form proposal or leave-behind for ADI technical and executive leadership after a prior call. It contains a title/invitation, ADI-specific strategic context, a DCFlex platform overview, a “two workstreams for one membership” value framing, member ecosystem table, Hardware Readiness Framework explanation, five ADI-specific engagement areas, membership terms, EPRI independence language, and a proposed follow-up scoping session. It is the more complete package, but also the denser one.<\/p>\n<p><strong>Document B<\/strong> is a short strategic value brief or slide-style executive brochure. It has a branded cover, a three-pillar convergence argument, an explanation of DCFlex as a global collaboration venue, Flex MOSAIC positioning, demonstration value, strategic value to ADI, and a concise “Joining DCFlex” terms table. It is more readable and visually polished, but it is much less tailored and less actionable.<\/p>\n<h2>3. External context used<\/h2>\n<p>ADI is not merely a generic semiconductor audience. Current public materials show ADI positioning itself around the intersection of sensing, power, control, AI, energy systems, and data centers. Its FY2025 annual report describes ADI as combining analog, digital, AI, and software technologies for automation, mobility, energy and data centers, healthcare, and climate-related applications, with FY2025 revenue of $11.0 billion and 45% of revenue from Industrial markets.  The CEO letter also frames energy management as a major transformation in which ADI provides precision power electronics, sensing, and real-time control “from the generation source, through the grid, all the way down to the chip.”<\/p>\n<p>For an ADI executive, the strongest DCFlex pitch should therefore connect to: faster data center time-to-power, power management differentiation, 800 VDC architectures, grid-edge intelligence, trusted measurement, standards influence, utility/data center ecosystem access, and independent validation. DCFlex’s public materials support this strategic context: EPRI says DCFlex aims to demonstrate how data centers can support and stabilize the grid while improving interconnection and efficiency, and Flex MOSAIC is positioned as a shared performance-based model for large-load flexibility. ([DCFleX][2])<\/p>\n<p>One important credibility caveat: public DCFlex pages clearly substantiate the five-workstream / Flex MOSAIC / demonstration framing, but they do not by themselves substantiate every Document A claim about the expanded Hardware Readiness Framework, $25 million platform, 75-to-100 member trajectory, or membership pricing. Those may be internal or confidential facts, but they should be sourced or caveated before being used with ADI. ([DCFleX][2])<\/p>\n<hr>\n<h2>4. Scorecard table<\/h2>\n<p>Weighted score formula: <strong>raw score ÷ 10 × category weight = weighted score<\/strong>.<\/p>\n<div class=\"table-scroll\"><table class=\"md-table\"><thead><tr><th>Category<\/th><th>Weight<\/th><th>Document A raw<\/th><th>Document A weighted score<\/th><th>Document B raw<\/th><th>Document B weighted score<\/th><th>Winner<\/th><th>Brief rationale<\/th><\/tr><\/thead><tbody>\n<tr><td>1. Executive relevance and strategic fit<\/td><td>12<\/td><td>9.0<\/td><td>9.0/10×12 = <strong>10.80<\/strong><\/td><td>7.5<\/td><td>7.5/10×12 = <strong>9.00<\/strong><\/td><td>A<\/td><td>A ties DCFlex directly to ADI’s AI data center, grid, sensing, power monitoring, 800 VDC, UPS, transformer, and power-quality priorities. B is strategically relevant but more generic.<\/td><\/tr>\n<tr><td>2. ADI-specific personalization and insight<\/td><td>10<\/td><td>9.0<\/td><td>9.0/10×10 = <strong>9.00<\/strong><\/td><td>5.5<\/td><td>5.5/10×10 = <strong>5.50<\/strong><\/td><td>A<\/td><td>A shows deep ADI-specific tailoring. B mostly says ADI has sensing, monitoring, control, and orchestration relevance without enough product or business specificity.<\/td><\/tr>\n<tr><td>3. Clarity of DCFlex value proposition<\/td><td>12<\/td><td>8.0<\/td><td>8.0/10×12 = <strong>9.60<\/strong><\/td><td>8.5<\/td><td>8.5/10×12 = <strong>10.20<\/strong><\/td><td>B<\/td><td>B explains DCFlex more simply through workstreams, Flex MOSAIC, and demonstrations. A explains more, but adds complexity with two workstreams and hardware-readiness detail.<\/td><\/tr>\n<tr><td>4. Business case and value to ADI<\/td><td>12<\/td><td>8.5<\/td><td>8.5/10×12 = <strong>10.20<\/strong><\/td><td>6.5<\/td><td>6.5/10×12 = <strong>7.80<\/strong><\/td><td>A<\/td><td>A identifies market credentialing, ecosystem access, standards awareness, validation, and specific technology pathways. B states strategic value but does not sufficiently prove it.<\/td><\/tr>\n<tr><td>5. Specificity of ask and next steps<\/td><td>9<\/td><td>8.5<\/td><td>8.5/10×9 = <strong>7.65<\/strong><\/td><td>5.5<\/td><td>5.5/10×9 = <strong>4.95<\/strong><\/td><td>A<\/td><td>A proposes a technical scoping session and identifies likely starting areas. B asks ADI to join on standard terms, but does not make the next action easy enough.<\/td><\/tr>\n<tr><td>6. Credibility, evidence, and substantiation<\/td><td>10<\/td><td>7.0<\/td><td>7.0/10×10 = <strong>7.00<\/strong><\/td><td>5.5<\/td><td>5.5/10×10 = <strong>5.50<\/strong><\/td><td>A<\/td><td>A has more concrete evidence and logic but needs source notes for major claims. B has fewer claims, but also fewer proofs and several unsupported superlatives.<\/td><\/tr>\n<tr><td>7. Persuasiveness, differentiation, and urgency<\/td><td>8<\/td><td>8.0<\/td><td>8.0/10×8 = <strong>6.40<\/strong><\/td><td>6.5<\/td><td>6.5/10×8 = <strong>5.20<\/strong><\/td><td>A<\/td><td>A creates urgency through expanded access, member ecosystem, research leverage, and near-term validation. B has a good “time-to-power” theme but weaker action pressure.<\/td><\/tr>\n<tr><td>8. Executive tone and concision<\/td><td>7<\/td><td>6.5<\/td><td>6.5/10×7 = <strong>4.55<\/strong><\/td><td>7.5<\/td><td>7.5/10×7 = <strong>5.25<\/strong><\/td><td>B<\/td><td>B is easier for an executive to skim. A is professional but too dense and technical for a first executive outreach package.<\/td><\/tr>\n<tr><td>9. Structure, flow, and readability<\/td><td>7<\/td><td>7.0<\/td><td>7.0/10×7 = <strong>4.90<\/strong><\/td><td>8.0<\/td><td>8.0/10×7 = <strong>5.60<\/strong><\/td><td>B<\/td><td>B has clearer visual hierarchy. A is logically structured but overloaded and does not lead hard enough with the executive decision case.<\/td><\/tr>\n<tr><td>10. Package completeness and communication effectiveness<\/td><td>5<\/td><td>8.5<\/td><td>8.5/10×5 = <strong>4.25<\/strong><\/td><td>6.5<\/td><td>6.5/10×5 = <strong>3.25<\/strong><\/td><td>A<\/td><td>A includes business rationale, technical paths, member ecosystem, fees, EPRI role, and next step. B is a useful brief but incomplete as a persuasion package.<\/td><\/tr>\n<tr><td>11. Risk management, factual accuracy, and professionalism<\/td><td>5<\/td><td>7.0<\/td><td>7.0/10×5 = <strong>3.50<\/strong><\/td><td>5.5<\/td><td>5.5/10×5 = <strong>2.75<\/strong><\/td><td>A<\/td><td>A has some overclaiming/source risk. B has several typos, broad unsupported claims, and a weaker factual/professional finish.<\/td><\/tr>\n<tr><td>12. Memorability and relationship-building potential<\/td><td>4<\/td><td>8.0<\/td><td>8.0/10×4 = <strong>3.20<\/strong><\/td><td>6.5<\/td><td>6.5/10×4 = <strong>2.60<\/strong><\/td><td>A<\/td><td>A feels like a serious follow-up to ADI, with relationship continuity and tailored opportunities. B is more polished but less memorable.<\/td><\/tr>\n<tr><td><strong>Total<\/strong><\/td><td><strong>100<\/strong><\/td><td><\/td><td><strong>81.05<\/strong><\/td><td><\/td><td><strong>67.60<\/strong><\/td><td><strong>A<\/strong><\/td><td><strong>Document A wins decisively by 13.45 points.<\/strong><\/td><\/tr>\n<\/tbody><\/table><\/div>\n<hr>\n<h2>5. Individual analysis of Document A<\/h2>\n<h3>Main strengths<\/h3>\n<p>Document A’s biggest strength is <strong>deep ADI-specific strategic mapping<\/strong>. It does not merely say “DCFlex is relevant to Analog Devices”; it tries to show why ADI’s sensing, measurement, power management, 800 VDC, power quality, transformer monitoring, UPS, BESS, and grid-edge capabilities belong inside the DCFlex ecosystem. The line positioning ADI across the “full signal chain — from 0.8V DC chip-level power monitoring to medium-voltage grid sensing” is exactly the kind of audience-specific framing that makes an executive feel the sender has done real work.<\/p>\n<p>It also gives ADI a <strong>clear role<\/strong>: ADI is not just a potential sponsor or passive member; it is framed as the instrumentation and observability layer that could make DCFlex hardware and flexibility demonstrations credible. That is much stronger than a generic “join our consortium” message. The five engagement areas — 800 VDC sensing, UPS DC bus sensing, transformer/SST sensing, power quality/grid-edge intelligence, and micro data centers — give ADI multiple plausible ways to engage.<\/p>\n<p>The <strong>business case is substantially stronger than B’s<\/strong>. Document A identifies several executive-relevant sources of value: independent validation, visibility to hyperscalers/utilities/EPCs/grid operators, standards awareness, early access to emerging technology categories, and market credentialing through EPRI. This maps well to ADI’s public strategic emphasis on data centers, energy management, sensing, control, and partnerships.<\/p>\n<p>The <strong>ask is also stronger<\/strong>. The proposed next step is a follow-up technical scoping session, with suggested starting points in UPS DC bus sensing and transformer/SST sensing. That is appropriately sized: it does not force an executive to approve a full membership immediately, but it does create a path toward serious engagement.<\/p>\n<h3>Main weaknesses<\/h3>\n<p>The main weakness is <strong>executive overload<\/strong>. Document A is long, dense, and technically rich. For a CTO, SVP of business development, or energy/data center strategy leader, that depth is useful. For a CEO, CFO, or general corporate development executive, it is probably too much for a first read. The strongest business argument appears after a large amount of technical and programmatic detail.<\/p>\n<p>A second weakness is <strong>insufficient proofing of big claims<\/strong>. Document A makes high-impact claims — “world’s largest,” “$25 million collaborative research program,” “approximately 75 organizations,” “expected to reach 100,” “two workstreams for one membership,” and “no independent performance benchmarks currently exist” — but the document itself does not visibly provide citations, footnotes, or appendices. Some of those claims may be true, but an executive audience will expect source discipline, especially for a paid consortium invitation.<\/p>\n<p>A third weakness is that the <strong>economic value remains qualitative<\/strong>. The package says ADI would gain visibility, validation, standards influence, and ecosystem access, but it does not quantify likely commercial outcomes. It does not estimate addressable market influence, design-win acceleration, customer-access value, standards-risk reduction, or avoided internal validation cost.<\/p>\n<h3>Best moments or strongest passages<\/h3>\n<p>The strongest passage is the ADI positioning near the beginning: ADI’s technologies sit between physical and digital systems and span chip-level power monitoring through grid sensing. That is a highly relevant thesis for an ADI executive.<\/p>\n<p>The “What ADI Gets: Two Workstreams for One Membership” framing is persuasive because it turns DCFlex from an abstract research initiative into a concrete membership value proposition. It says, in effect, that ADI gets both the original flexibility work and the new hardware-readiness scope for one investment.<\/p>\n<p>The member ecosystem table is another strong moment. It reframes DCFlex membership as access to the organizations that specify, procure, regulate, and deploy the technologies ADI cares about. That is a better executive argument than simply saying “many companies participate.”<\/p>\n<p>The EPRI independence section is also important. The statement that EPRI does not advocate for ADI technologies and will publish findings accurately regardless of outcome increases trust. It anticipates a sophisticated executive’s concern that “validation” cannot simply mean paid endorsement.<\/p>\n<h3>Missing or underdeveloped elements<\/h3>\n<p>Document A needs a <strong>one-page executive front door<\/strong>. Before the technical sections, it should answer: Why ADI? Why DCFlex? Why now? What decision is requested? What is the expected value of the next meeting?<\/p>\n<p>It also needs a <strong>more quantified business case<\/strong>. Examples: “DCFlex gives ADI exposure to X categories of specifiers,” “independent validation could accelerate design acceptance in Y customer segments,” or “the relevant data center power management opportunity is growing because ADI’s own data center segment has surpassed a $1 billion run rate.” ADI’s Q4 FY2025 commentary says its data center segment surpassed a $1 billion run rate and had grown more than 50% year over year for three consecutive quarters, which would be directly relevant support if used carefully. ([Analog Devices][3])<\/p>\n<p>The proposal should also define <strong>exact decision rights and participation model<\/strong>. Who from ADI should attend? CTO? Energy management business lead? Data center power product lead? Grid-edge team? What would EPRI need from ADI before the scoping session?<\/p>\n<h3>Risks or concerns<\/h3>\n<p>The biggest risk is <strong>overclaiming without visible substantiation<\/strong>. A skeptical ADI executive or staff reviewer could challenge claims about the size of DCFlex, member count, funding, Hardware Readiness Framework scope, or lack of independent benchmarks. These claims should either be footnoted, sourced to EPRI internal materials, or softened.<\/p>\n<p>There is also a <strong>membership-pricing consistency risk<\/strong> across the two packages. Document A uses <strong>$750,000 total / $250,000 annual spread<\/strong>, while Document B uses <strong>€250,000 annual fee<\/strong>. If both documents are part of the same outreach, that discrepancy must be reconciled before sending.<\/p>\n<p>Finally, A should reduce absolute phrasing such as “every technology” and “world’s largest” unless EPRI is prepared to defend those statements. Executives do not need inflated certainty; they need credible reasons to act.<\/p>\n<h3>Likely executive reaction<\/h3>\n<p>A technically oriented ADI executive would likely think: <strong>“This is unusually tailored and worth routing to the relevant team.”<\/strong> The document gives enough specificity to make DCFlex feel real and strategically adjacent to ADI’s current priorities.<\/p>\n<p>A time-constrained CEO/CFO-type reader might think: <strong>“This is too much; send me the two-page summary.”<\/strong> The depth is valuable, but the package needs a sharper executive wrapper.<\/p>\n<h3>Specific recommendations to improve Document A<\/h3>\n<ol><li>Add a <strong>half-page executive summary<\/strong> at the front with three bullets: strategic fit, value to ADI, proposed next step.<\/li><li>Move the <strong>ask<\/strong> to page 1: “We propose a 60-minute scoping session with ADI data center power, grid-edge, and strategy leaders.”<\/li><li>Add <strong>source notes<\/strong> for membership count, funding, Hardware Readiness Framework, member list, 800 VDC claims, and pricing.<\/li><li>Convert the five engagement areas into a <strong>ranked opportunity table<\/strong>: near-term, medium-term, ADI owner, EPRI workstream, output, value.<\/li><li>Tighten language by cutting repetitive claims about validation and replacing them with concrete deliverables.<\/li><li>Add a <strong>business outcome line<\/strong> for each engagement area: design-win acceleration, standards input, customer/specifier access, validated performance data, or product roadmap intelligence.<\/li><li>Reconcile currency and fee terms with Document B before any combined use.<\/li><\/ol>\n<hr>\n<h2>6. Individual analysis of Document B<\/h2>\n<h3>Main strengths<\/h3>\n<p>Document B’s main strength is <strong>executive readability<\/strong>. It looks and feels like a strategic brief rather than a technical appendix. It opens with a simple premise: DCFlex can position Analog Devices across the data-center-to-grid value chain. It then organizes the argument around three areas: flexible interconnection, grid reliability/large-load integration, and 800 VDC architecture.<\/p>\n<p>It also explains DCFlex more cleanly than A. The five-workstream structure, Flex MOSAIC description, and demonstration narrative are easier to absorb quickly. That aligns with public DCFlex materials, which describe workstreams spanning grid-informed data center design, utility programs, planning, energy supply, and distribution-connected data centers. ([DCFleX][2])<\/p>\n<p>The <strong>Flex MOSAIC passage is one of B’s best moments<\/strong>. It explains that Flex MOSAIC provides a shared vocabulary for flexibility based on magnitude, timing, duration, and frequency. This makes DCFlex sound like more than a research club; it becomes a market-language and standardization mechanism.  Public DCFlex materials similarly describe Flex MOSAIC as a technology-neutral framework based on performance characteristics such as notification time, duration, frequency of use, load-adjustment depth, ramp behavior, and availability. ([DCFleX][4])<\/p>\n<p>The design and length are also strengths. B is more likely than A to be skimmed in full by a senior executive.<\/p>\n<h3>Main weaknesses<\/h3>\n<p>The central weakness is that <strong>B is not personalized enough to ADI<\/strong>. It repeatedly says ADI has sensing, monitoring, control, orchestration, and data-center-to-grid relevance, but it does not prove that with ADI-specific technologies, recent ADI moves, customer segments, or product examples. Compared with A, it feels more like a DCFlex brochure with ADI’s name inserted.<\/p>\n<p>The second weakness is a <strong>weak ask<\/strong>. “We propose Analog Devices join the programme on the standard membership terms” is too abrupt for an executive who has not yet been shown a sufficiently quantified value case. A better ask would be an executive briefing, technical scoping session, or joint opportunity-mapping workshop.<\/p>\n<p>The third weakness is <strong>evidence thinness<\/strong>. B makes several strong claims — for example that no other initiative brings together credible utility participation, demonstrations, and a classification framework under a single trusted institution — but it does not substantiate them. The claim may be directionally persuasive, but it reads as marketing unless supported.<\/p>\n<h3>Best moments or strongest passages<\/h3>\n<p>The best passage is the “Why DCFlex Is Different” section. It explains DCFlex as linking design, interconnection, operations, and planning through five workstreams. That is concise and useful.<\/p>\n<p>The Flex MOSAIC section is also strong because it makes the initiative tangible: flexibility becomes a repeatable language for utilities, developers, and regulators.<\/p>\n<p>The closing line — that EPRI and DCFlex offer ADI a neutral global platform to make leadership visible, credible, and repeatable — is rhetorically strong. The problem is that the document has not done enough work to make that conclusion feel earned.<\/p>\n<h3>Missing or underdeveloped elements<\/h3>\n<p>B needs <strong>specific ADI proof points<\/strong>. It should mention ADI’s public 800 VDC support, hot-swap protection, high-voltage conversion, power system management, grid-edge intelligence investment, and power-quality monitoring capabilities. ADI’s own public materials support these angles. ([Analog Devices][1])<\/p>\n<p>It also needs a <strong>clearer path from participation to value<\/strong>. What exactly would ADI get from DCFlex? Independent validation? Member working-group influence? Access to utilities and hyperscalers? Demonstration participation? Standards-relevant evidence? The brief hints at these, but does not make them concrete enough.<\/p>\n<p>Finally, it needs a <strong>next-step mechanism<\/strong>. A €250,000 annual membership ask should not be the first actionable step unless the relationship is already advanced.<\/p>\n<h3>Risks or concerns<\/h3>\n<p>B has several professionalism issues that matter for an executive audience. It contains typos and phrasing problems such as “to to software-based orchestration,” “brining power,” inconsistent “data center / data centre,” “member’s advisory,” and some awkward grammar. These errors reduce confidence, especially because the package is short enough that every sentence carries more weight.<\/p>\n<p>It also risks <strong>overstating ADI’s software orchestration position<\/strong>. ADI has software, AI, and grid-edge ambitions, but B’s framing could make ADI sound like a full-stack utility/grid orchestration company. That may be directionally plausible in selected partnerships, but it should be expressed more carefully.<\/p>\n<p>The <strong>currency and fee issue<\/strong> is also a risk if the package is paired with A. B states €250,000 annually for three years; A states $250,000 annually or $750,000 lump sum. That discrepancy could create immediate procurement confusion.<\/p>\n<h3>Likely executive reaction<\/h3>\n<p>A senior executive would likely understand B quickly and think: <strong>“This is relevant, but I need more specifics.”<\/strong> It is good enough to create conceptual interest, but not strong enough to justify engagement on its own.<\/p>\n<p>A staff reviewer might say: <strong>“This is a nice overview, but what exactly is the ADI opportunity?”<\/strong> That is the core problem.<\/p>\n<h3>Specific recommendations to improve Document B<\/h3>\n<ol><li>Add an ADI-specific proof section: 800 VDC, hot-swap protection, high-voltage conversion, power-quality monitoring, grid-edge intelligence, and condition monitoring.<\/li><li>Replace generic claims with <strong>ADI-specific value statements<\/strong>: “DCFlex can help ADI validate X with Y stakeholders for Z market outcome.”<\/li><li>Add a <strong>concrete next step<\/strong> before the membership ask: executive briefing or technical scoping session.<\/li><li>Fix all typos, grammar issues, and spelling inconsistencies.<\/li><li>Add a short evidence box with DCFlex member categories, demonstration count, and Flex MOSAIC status.<\/li><li>Reconcile membership currency and terms.<\/li><li>Include a named EPRI contact and suggested attendees from ADI.<\/li><\/ol>\n<hr>\n<h2>7. Head-to-head comparison<\/h2>\n<div class=\"table-scroll\"><table class=\"md-table\"><thead><tr><th>Dimension<\/th><th>Better document<\/th><th>Rationale<\/th><\/tr><\/thead><tbody>\n<tr><td>Which better understands Analog Devices?<\/td><td><strong>Document A<\/strong><\/td><td>A shows genuine ADI-specific thinking across sensing, power monitoring, 800 VDC, UPS, transformers, power quality, grid edge, and data center infrastructure. B is directionally relevant but generic.<\/td><\/tr>\n<tr><td>Which better explains DCFlex?<\/td><td><strong>Document B, narrowly<\/strong><\/td><td>B gives the cleaner high-level DCFlex explanation: five workstreams, Flex MOSAIC, demonstrations, time-to-power. A explains more but is more complicated.<\/td><\/tr>\n<tr><td>Which better makes the business case?<\/td><td><strong>Document A<\/strong><\/td><td>A explains ecosystem visibility, independent validation, standards awareness, and technical engagement areas. B asserts strategic value but does not develop the case.<\/td><\/tr>\n<tr><td>Which has the stronger executive ask?<\/td><td><strong>Document A<\/strong><\/td><td>A proposes a follow-up technical scoping session and identifies starting areas. B jumps to “join the programme” without enough intermediate path.<\/td><\/tr>\n<tr><td>Which is more persuasive?<\/td><td><strong>Document A<\/strong><\/td><td>A gives ADI more reasons to act and more ways to engage. B is polished but not sufficiently motivating.<\/td><\/tr>\n<tr><td>Which is more polished?<\/td><td><strong>Mixed: B visually, A substantively<\/strong><\/td><td>B is more visually polished and concise. A is more content-complete and professional in substance. B’s typos hurt its polish score.<\/td><\/tr>\n<tr><td>Which is more likely to result in a meeting or engagement?<\/td><td><strong>Document A<\/strong><\/td><td>A is more likely to make an ADI executive or delegate say, “This is specific enough to discuss.” B may generate interest but not commitment.<\/td><\/tr>\n<\/tbody><\/table><\/div>\n<hr>\n<h2>8. Final winner and rationale<\/h2>\n<p><strong>Final winner: Document A.<\/strong><\/p>\n<p>Document A scores <strong>81.05 / 100<\/strong> versus Document B’s <strong>67.60 / 100<\/strong>. The difference is <strong>13.45 points<\/strong>, which is a <strong>decisive win<\/strong>.<\/p>\n<p>The reason is not that A is a better-looking document. It is not. B is cleaner and easier to skim. The reason A wins is that it is much more likely to motivate executive action because it answers the central question an ADI executive will ask: <strong>“Why does this matter to Analog Devices specifically?”<\/strong><\/p>\n<p>A gives a credible answer: DCFlex can provide ADI with independent validation, access to relevant utilities/hyperscalers/grid operators/EPCs, standards-relevant research input, and specific technical pathways in 800 VDC, UPS sensing, transformer/SST monitoring, power quality, and micro data centers. B mostly says DCFlex is strategically relevant; A shows how.<\/p>\n<hr>\n<h2>9. Recommended “best combined version”<\/h2>\n<p>The strongest final package should combine <strong>B’s executive structure and visual discipline<\/strong> with <strong>A’s ADI-specific substance and actionability<\/strong>.<\/p>\n<p>Take from <strong>Document B<\/strong>: the branded cover, concise three-pillar framing, simple DCFlex workstream explanation, Flex MOSAIC overview, and executive-friendly design.<\/p>\n<p>Take from <strong>Document A<\/strong>: the ADI-specific technology mapping, member ecosystem logic, independent-validation argument, specific engagement areas, membership options, EPRI independence language, and concrete scoping-session ask.<\/p>\n<p>Top 5 improvements to make the winning package stronger:<\/p>\n<ol><li><strong>Create a two-layer package:<\/strong> a 2-page executive brief plus a technical appendix. Put A’s depth in the appendix, not the opening.<\/li><li><strong>Lead with the decision case:<\/strong> “ADI should engage DCFlex because it can validate and shape the sensing/control layer for AI data center grid flexibility.”<\/li><li><strong>Add source notes and clean up claims:<\/strong> especially for funding, membership count, Hardware Readiness Framework scope, member names, and pricing.<\/li><li><strong>Quantify the value where possible:<\/strong> customer/specifier access, design-win acceleration, standards influence, validation cost avoidance, and strategic visibility.<\/li><li><strong>Make the next step unmistakable:<\/strong> propose a 60-minute ADI–EPRI scoping session with agenda, target attendees, proposed dates, and expected output.<\/li><\/ol>\n<h2>10. Confidence level<\/h2>\n<p><strong>Confidence level: High.<\/strong><\/p>\n<p>The judgment is high-confidence because the documents differ sharply on the most important persuasion dimensions: ADI-specific insight, business case, evidence, and actionable next step. External ADI and DCFlex context also supports the conclusion that a tailored data-center/grid/power-management argument is the right persuasion strategy.<\/p>\n<p>What could change the assessment: if Document B were intended only as a cover slide deck paired with a live executive presentation, it would score higher on practical usefulness. If Document A’s internal claims about DCFlex expansion, funding, member count, or membership terms are inaccurate or unsupported, its risk and credibility scores would drop. Even then, A’s core strategic tailoring would likely remain stronger than B’s.<\/p>\n<p>[1]: https://www.analog.com/en/newsroom/press-releases/2025/8-21-2025-powering-the-future-of-ai.html &quot;Powering the Future of AI: Analog Devices Announces Support for 800 VDC Data Center Architectures | Analog Devices&quot; [2]: https://dcflex.epri.com/ &quot;Homepage | DCFlex&quot; [3]: https://investor.analog.com/static-files/956acee7-5343-4e21-b695-8dda8251dc84 &quot;Q4 2025 Analog Devices Inc Earnings Call on November 25, 2025 / 3:00PM&quot; [4]: https://dcflex.epri.com/flex-mosaic &quot;Flex MOSAIC™ | DCFlex&quot;<\/p>", "margin": 13.45}}, "aggregate": {"meanA": 87.42, "meanB": 68.02, "meanMargin": 19.4, "medianA": 86.4, "medianB": 67.6, "modelsForA": 3, "modelsTotal": 3, "rows": [{"categoryId": 1, "category": "Executive relevance and strategic fit", "short": "Strategic fit", "weight": 12, "aRawAvg": 9.17, "bRawAvg": 7.33, "aWeightedAvg": 11.0, "bWeightedAvg": 8.8, "weightedMargin": 2.2, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A aligns with ADI's shift to system-level solutions.", "Claude": "A ties DCFlex to ADI's actual pivot to system-level solutions; B speaks in industry generalities.", "ChatGPT": "A ties DCFlex directly to ADI’s AI data center, grid, sensing, power monitoring, 800 VDC, UPS, transformer, and power-quality priorities."}}, {"categoryId": 2, "category": "Analog Devices-specific personalization and insight", "short": "Personalization", "weight": 10, "aRawAvg": 9.5, "bRawAvg": 5.5, "aWeightedAvg": 9.5, "bWeightedAvg": 5.5, "weightedMargin": 4.0, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A cites specific April 2026 calls and ADI-specific R&D.", "Claude": "A names AD777x, 800 VDC, Sense investment, and transformer monitoring; B is easily swappable.", "ChatGPT": "A shows deep ADI-specific tailoring; B has not enough product or business specificity."}}, {"categoryId": 3, "category": "Clarity of the DCFlex value proposition", "short": "DCFlex value", "weight": 12, "aRawAvg": 8.33, "bRawAvg": 8.17, "aWeightedAvg": 10.0, "bWeightedAvg": 9.8, "weightedMargin": 0.2, "winner": "A", "modelWins": {"A": 1, "B": 1, "Tie": 1}, "rationales": {"Gemini": "Both clarify the workstream structure effectively.", "Claude": "B's WS1–WS5 frame and Flex MOSAIC are crisp; A is heavier but more complete.", "ChatGPT": "B explains DCFlex more simply through workstreams, Flex MOSAIC, and demonstrations."}}, {"categoryId": 4, "category": "Business case and value to Analog Devices", "short": "Business case", "weight": 12, "aRawAvg": 9.17, "bRawAvg": 6.67, "aWeightedAvg": 11.0, "bWeightedAvg": 8.0, "weightedMargin": 3.0, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A frames membership as a $25M research-platform leverage.", "Claude": "A's five engagement areas are commercially actionable; B's value claims are abstract.", "ChatGPT": "A identifies market credentialing, ecosystem access, standards awareness, validation, and specific pathways."}}, {"categoryId": 5, "category": "Specificity of the ask and next steps", "short": "Ask / next steps", "weight": 9, "aRawAvg": 9.0, "bRawAvg": 5.5, "aWeightedAvg": 8.1, "bWeightedAvg": 4.95, "weightedMargin": 3.15, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A proposes a specific follow-up technical scoping session.", "Claude": "A proposes a scoping session, names E2/E3 as starts, and lists contacts.", "ChatGPT": "A proposes a technical scoping session and identifies likely starting areas."}}, {"categoryId": 6, "category": "Credibility, evidence, and substantiation", "short": "Credibility", "weight": 10, "aRawAvg": 8.5, "bRawAvg": 6.33, "aWeightedAvg": 8.5, "bWeightedAvg": 6.33, "weightedMargin": 2.17, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A uses ADI’s own published research and product series.", "Claude": "A names 30+ member organizations and concrete EPRI capabilities; B asserts differentiation.", "ChatGPT": "A has more concrete evidence and logic but needs source notes for major claims."}}, {"categoryId": 7, "category": "Persuasiveness, differentiation, and urgency", "short": "Urgency", "weight": 8, "aRawAvg": 8.33, "bRawAvg": 6.5, "aWeightedAvg": 6.66, "bWeightedAvg": 5.2, "weightedMargin": 1.46, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A highlights additional capacity available to members joining now.", "Claude": "A creates a two-workstreams-for-one-fee timing hook; B has no urgency mechanism.", "ChatGPT": "A creates urgency through expanded access, member ecosystem, research leverage, and near-term validation."}}, {"categoryId": 8, "category": "Executive tone and concision", "short": "Executive tone", "weight": 7, "aRawAvg": 7.33, "bRawAvg": 7.33, "aWeightedAvg": 5.13, "bWeightedAvg": 5.13, "weightedMargin": 0.0, "winner": "Tie", "modelWins": {"A": 1, "B": 2, "Tie": 0}, "rationales": {"Gemini": "B is more concise and punchy for a very busy executive.", "Claude": "A is long but tight; B is shorter but typos undermine the executive register.", "ChatGPT": "B is easier for an executive to skim; A is too dense for a first outreach package."}}, {"categoryId": 9, "category": "Structure, flow, and readability", "short": "Structure", "weight": 7, "aRawAvg": 7.67, "bRawAvg": 7.67, "aWeightedAvg": 5.37, "bWeightedAvg": 5.37, "weightedMargin": 0.0, "winner": "Tie", "modelWins": {"A": 2, "B": 1, "Tie": 0}, "rationales": {"Gemini": "A’s E1–E5 engagement areas create a clear technical roadmap.", "Claude": "Close. B has a cleaner skeleton; A's tables and logical layering carry it.", "ChatGPT": "B has clearer visual hierarchy; A is overloaded and does not lead hard enough with the decision case."}}, {"categoryId": 10, "category": "Package completeness and communication effectiveness", "short": "Completeness", "weight": 5, "aRawAvg": 9.0, "bRawAvg": 6.17, "aWeightedAvg": 4.5, "bWeightedAvg": 3.08, "weightedMargin": 1.42, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A covers everything from IP handling to specific next steps.", "Claude": "A has contacts, pricing, ecosystem context, and prior-call reference; B is missing these.", "ChatGPT": "A includes business rationale, technical paths, ecosystem, fees, EPRI role, and next step."}}, {"categoryId": 11, "category": "Risk management, factual accuracy, and professionalism", "short": "Risk mgmt.", "weight": 5, "aRawAvg": 8.5, "bRawAvg": 6.5, "aWeightedAvg": 4.25, "bWeightedAvg": 3.25, "weightedMargin": 1.0, "winner": "A", "modelWins": {"A": 2, "B": 0, "Tie": 1}, "rationales": {"Gemini": "Both maintain high professional standards and confidentiality.", "Claude": "B has multiple typos, mixed UK/US English, a duplicated phrase, and awkward currency.", "ChatGPT": "A has some overclaiming/source risk; B has typos, broad unsupported claims, and weaker factual/professional finish."}}, {"categoryId": 12, "category": "Memorability and relationship-building potential", "short": "Memorability", "weight": 4, "aRawAvg": 8.5, "bRawAvg": 6.5, "aWeightedAvg": 3.4, "bWeightedAvg": 2.6, "weightedMargin": 0.8, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A’s Hardware Readiness Framework is a sticky concept.", "Claude": "A demonstrates effort that itself is relationship capital; B reads as templated.", "ChatGPT": "A feels like a serious follow-up with relationship continuity and tailored opportunities."}}], "topAAdvantages": [{"categoryId": 2, "category": "Analog Devices-specific personalization and insight", "short": "Personalization", "weight": 10, "aRawAvg": 9.5, "bRawAvg": 5.5, "aWeightedAvg": 9.5, "bWeightedAvg": 5.5, "weightedMargin": 4.0, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A cites specific April 2026 calls and ADI-specific R&D.", "Claude": "A names AD777x, 800 VDC, Sense investment, and transformer monitoring; B is easily swappable.", "ChatGPT": "A shows deep ADI-specific tailoring; B has not enough product or business specificity."}}, {"categoryId": 5, "category": "Specificity of the ask and next steps", "short": "Ask / next steps", "weight": 9, "aRawAvg": 9.0, "bRawAvg": 5.5, "aWeightedAvg": 8.1, "bWeightedAvg": 4.95, "weightedMargin": 3.15, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A proposes a specific follow-up technical scoping session.", "Claude": "A proposes a scoping session, names E2/E3 as starts, and lists contacts.", "ChatGPT": "A proposes a technical scoping session and identifies likely starting areas."}}, {"categoryId": 4, "category": "Business case and value to Analog Devices", "short": "Business case", "weight": 12, "aRawAvg": 9.17, "bRawAvg": 6.67, "aWeightedAvg": 11.0, "bWeightedAvg": 8.0, "weightedMargin": 3.0, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A frames membership as a $25M research-platform leverage.", "Claude": "A's five engagement areas are commercially actionable; B's value claims are abstract.", "ChatGPT": "A identifies market credentialing, ecosystem access, standards awareness, validation, and specific pathways."}}, {"categoryId": 1, "category": "Executive relevance and strategic fit", "short": "Strategic fit", "weight": 12, "aRawAvg": 9.17, "bRawAvg": 7.33, "aWeightedAvg": 11.0, "bWeightedAvg": 8.8, "weightedMargin": 2.2, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A aligns with ADI's shift to system-level solutions.", "Claude": "A ties DCFlex to ADI's actual pivot to system-level solutions; B speaks in industry generalities.", "ChatGPT": "A ties DCFlex directly to ADI’s AI data center, grid, sensing, power monitoring, 800 VDC, UPS, transformer, and power-quality priorities."}}, {"categoryId": 6, "category": "Credibility, evidence, and substantiation", "short": "Credibility", "weight": 10, "aRawAvg": 8.5, "bRawAvg": 6.33, "aWeightedAvg": 8.5, "bWeightedAvg": 6.33, "weightedMargin": 2.17, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A uses ADI’s own published research and product series.", "Claude": "A names 30+ member organizations and concrete EPRI capabilities; B asserts differentiation.", "ChatGPT": "A has more concrete evidence and logic but needs source notes for major claims."}}], "closestCategories": [{"categoryId": 8, "category": "Executive tone and concision", "short": "Executive tone", "weight": 7, "aRawAvg": 7.33, "bRawAvg": 7.33, "aWeightedAvg": 5.13, "bWeightedAvg": 5.13, "weightedMargin": 0.0, "winner": "Tie", "modelWins": {"A": 1, "B": 2, "Tie": 0}, "rationales": {"Gemini": "B is more concise and punchy for a very busy executive.", "Claude": "A is long but tight; B is shorter but typos undermine the executive register.", "ChatGPT": "B is easier for an executive to skim; A is too dense for a first outreach package."}}, {"categoryId": 9, "category": "Structure, flow, and readability", "short": "Structure", "weight": 7, "aRawAvg": 7.67, "bRawAvg": 7.67, "aWeightedAvg": 5.37, "bWeightedAvg": 5.37, "weightedMargin": 0.0, "winner": "Tie", "modelWins": {"A": 2, "B": 1, "Tie": 0}, "rationales": {"Gemini": "A’s E1–E5 engagement areas create a clear technical roadmap.", "Claude": "Close. B has a cleaner skeleton; A's tables and logical layering carry it.", "ChatGPT": "B has clearer visual hierarchy; A is overloaded and does not lead hard enough with the decision case."}}, {"categoryId": 3, "category": "Clarity of the DCFlex value proposition", "short": "DCFlex value", "weight": 12, "aRawAvg": 8.33, "bRawAvg": 8.17, "aWeightedAvg": 10.0, "bWeightedAvg": 9.8, "weightedMargin": 0.2, "winner": "A", "modelWins": {"A": 1, "B": 1, "Tie": 1}, "rationales": {"Gemini": "Both clarify the workstream structure effectively.", "Claude": "B's WS1–WS5 frame and Flex MOSAIC are crisp; A is heavier but more complete.", "ChatGPT": "B explains DCFlex more simply through workstreams, Flex MOSAIC, and demonstrations."}}, {"categoryId": 12, "category": "Memorability and relationship-building potential", "short": "Memorability", "weight": 4, "aRawAvg": 8.5, "bRawAvg": 6.5, "aWeightedAvg": 3.4, "bWeightedAvg": 2.6, "weightedMargin": 0.8, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"Gemini": "A’s Hardware Readiness Framework is a sticky concept.", "Claude": "A demonstrates effort that itself is relationship capital; B reads as templated.", "ChatGPT": "A feels like a serious follow-up with relationship continuity and tailored opportunities."}}]}, "promptHtml": "<p>You are an impartial executive-communications evaluator. I am judging two competing communication packages intended to persuade an executive at Analog Devices to join or engage with EPRI’s DCFlex initiative.<\/p>\n<p>I will provide two Word documents:<\/p>\n<ul><li>Document A<\/li><li>Document B<\/li><\/ul>\n<p>Your job is to conduct an extensive, fair, evidence-based analysis of each document and determine which package is more likely to succeed with an Analog Devices executive audience.<\/p>\n<p>Important context:<\/p>\n<ul><li>Target audience: an executive at Analog Devices.<\/li><li>Objective: persuade Analog Devices to seriously consider joining, partnering with, or engaging in the EPRI DCFlex initiative.<\/li><li>Evaluation focus: not just writing quality, but likelihood of motivating executive action.<\/li><li>Judge the documents, not the authors.<\/li><li>If the documents contain names or identifying details, do not let those bias the evaluation.<\/li><li>If external research is available, use only current, credible sources to understand Analog Devices’ likely executive priorities, market position, and strategic interests. Clearly distinguish document-based observations from externally researched context. If external research is not available, proceed using only the documents and general executive communication principles.<\/li><\/ul>\n<p>Please perform the following analysis.<\/p>\n<p>First, read both documents fully. Identify what each package appears to contain, such as email copy, cover letter, one-pager, proposal, talking points, briefing memo, slide content, or other materials. Briefly summarize the purpose and structure of each document.<\/p>\n<p>Then evaluate each document using the weighted rubric below. Use a 0–10 raw score for each category, allowing half-points. Convert each raw score into a weighted score using the category weight. Show the math clearly.<\/p>\n<p>Scoring scale:<\/p>\n<ul><li>9–10: Exceptional; highly likely to resonate with an executive audience.<\/li><li>7–8.5: Strong; effective with some room for improvement.<\/li><li>5–6.5: Adequate; usable but may not be compelling enough.<\/li><li>3–4.5: Weak; significant concerns or missing elements.<\/li><li>0–2.5: Very poor, absent, confusing, or counterproductive.<\/li><\/ul>\n<p>Rubric, total 100 points:<\/p>\n<ol><li>Executive relevance and strategic fit — 12 points<\/li><\/ol>\n<p>Assess whether the package speaks to the priorities of an Analog Devices executive. Does it connect DCFlex to strategic, commercial, technical, operational, sustainability, resilience, or market-positioning concerns that would matter to ADI leadership?<\/p>\n<ol><li>Analog Devices-specific personalization and insight — 10 points<\/li><\/ol>\n<p>Assess whether the communication feels tailored to Analog Devices rather than generic. Does it reference ADI’s likely business interests, technologies, customer base, energy needs, semiconductor/manufacturing realities, electrification, grid-interactive opportunities, or partnership rationale in a credible way?<\/p>\n<ol><li>Clarity of the DCFlex value proposition — 12 points<\/li><\/ol>\n<p>Assess how clearly the document explains what DCFlex is, why it matters, and what role ADI could play. Does the reader quickly understand the opportunity?<\/p>\n<ol><li>Business case and value to Analog Devices — 12 points<\/li><\/ol>\n<p>Assess whether the package explains what ADI gains. Consider financial value, strategic advantage, innovation benefits, customer relevance, operational flexibility, resilience, sustainability, regulatory alignment, thought leadership, and potential market differentiation.<\/p>\n<ol><li>Specificity of the ask and next steps — 9 points<\/li><\/ol>\n<p>Assess whether the package makes it easy for an executive to say yes to a concrete next step. Is the ask specific, appropriately sized, and actionable? Does it propose a meeting, pilot, executive briefing, technical discussion, membership path, or other clear action?<\/p>\n<ol><li>Credibility, evidence, and substantiation — 10 points<\/li><\/ol>\n<p>Assess whether claims are supported by evidence, logic, examples, data, references, EPRI credibility, industry trends, or plausible reasoning. Penalize vague claims, unsupported superlatives, or overpromising.<\/p>\n<ol><li>Persuasiveness, differentiation, and urgency — 8 points<\/li><\/ol>\n<p>Assess whether the package creates a compelling reason to act now. Does it explain why this initiative is distinctive, timely, and worth executive attention compared with other competing priorities?<\/p>\n<ol><li>Executive tone and concision — 7 points<\/li><\/ol>\n<p>Assess whether the writing is appropriate for a senior executive. Is it concise, confident, professional, respectful, and direct? Does it avoid unnecessary jargon, academic phrasing, sales hype, or excessive technical detail?<\/p>\n<ol><li>Structure, flow, and readability — 7 points<\/li><\/ol>\n<p>Assess whether the document is easy to navigate. Does it lead with the strongest message? Are headings, sequencing, summaries, and transitions effective? Can a busy executive grasp the point quickly?<\/p>\n<ol><li>Package completeness and communication effectiveness — 5 points<\/li><\/ol>\n<p>Assess whether the overall package feels complete and usable. Does it include the right materials for outreach? Are there gaps in audience framing, message hierarchy, supporting detail, or follow-up materials?<\/p>\n<ol><li>Risk management, factual accuracy, and professionalism — 5 points<\/li><\/ol>\n<p>Assess whether the communication avoids reputational, factual, legal, confidentiality, or relationship risks. Penalize inaccurate assumptions, exaggerated claims, insensitive phrasing, poor formatting, typos, or anything that could reduce trust.<\/p>\n<ol><li>Memorability and relationship-building potential — 4 points<\/li><\/ol>\n<p>Assess whether the package leaves a positive impression and opens the door to a relationship. Does it make EPRI and DCFlex feel credible, relevant, and worth continued discussion?<\/p>\n<p>After scoring, provide the following output:<\/p>\n<ol><li>Executive summary<\/li><\/ol>\n<p>Give a concise overview of which document is stronger and why. State the winner clearly.<\/p>\n<ol><li>Scorecard table<\/li><\/ol>\n<p>Create a table showing:<\/p>\n<ul><li>Category<\/li><li>Weight<\/li><li>Document A raw score<\/li><li>Document A weighted score<\/li><li>Document B raw score<\/li><li>Document B weighted score<\/li><li>Winner by category<\/li><li>Brief rationale<\/li><\/ul>\n<ol><li>Individual analysis of Document A<\/li><\/ol>\n<p>Provide a thorough analysis of Document A, including:<\/p>\n<ul><li>Main strengths<\/li><li>Main weaknesses<\/li><li>Best moments or strongest passages<\/li><li>Missing or underdeveloped elements<\/li><li>Risks or concerns<\/li><li>Likely executive reaction<\/li><li>Specific recommendations to improve it<\/li><\/ul>\n<p>Use brief excerpts or paraphrased examples from the document to support your points.<\/p>\n<ol><li>Individual analysis of Document B<\/li><\/ol>\n<p>Provide the same level of analysis for Document B:<\/p>\n<ul><li>Main strengths<\/li><li>Main weaknesses<\/li><li>Best moments or strongest passages<\/li><li>Missing or underdeveloped elements<\/li><li>Risks or concerns<\/li><li>Likely executive reaction<\/li><li>Specific recommendations to improve it<\/li><\/ul>\n<p>Use brief excerpts or paraphrased examples from the document to support your points.<\/p>\n<ol><li>Head-to-head comparison<\/li><\/ol>\n<p>Compare the two documents directly across the most important dimensions:<\/p>\n<ul><li>Which better understands Analog Devices?<\/li><li>Which better explains DCFlex?<\/li><li>Which better makes the business case?<\/li><li>Which has the stronger executive ask?<\/li><li>Which is more persuasive?<\/li><li>Which is more polished?<\/li><li>Which is more likely to result in a meeting or engagement?<\/li><\/ul>\n<ol><li>Final winner and rationale<\/li><\/ol>\n<p>Name the winner. Provide the final total score for each document out of 100. Explain whether the margin is decisive, moderate, or narrow.<\/p>\n<p>Use this interpretation:<\/p>\n<ul><li>10+ point difference: decisive win<\/li><li>5–9.5 point difference: clear but not overwhelming win<\/li><li>2–4.5 point difference: narrow win<\/li><li>Less than 2 points: essentially a tie, but still identify which document has the slight edge<\/li><\/ul>\n<ol><li>Recommended “best combined version”<\/li><\/ol>\n<p>Briefly explain what should be taken from each document to create the strongest possible final package. Identify the top 5 improvements that would make the winning package even stronger.<\/p>\n<ol><li>Confidence level<\/li><\/ol>\n<p>State your confidence in the judgment: High, Medium, or Low. Explain what, if anything, would change your assessment.<\/p>\n<p>Be candid and rigorous. Do not default to politeness. The goal is to determine which package is most likely to persuade an Analog Devices executive to engage with EPRI’s DCFlex initiative.<\/p>", "promptRaw": "You are an impartial executive-communications evaluator. I am judging two competing communication packages intended to persuade an executive at Analog Devices to join or engage with EPRI’s DCFlex initiative.\n\nI will provide two Word documents:\n- Document A\n- Document B\n\nYour job is to conduct an extensive, fair, evidence-based analysis of each document and determine which package is more likely to succeed with an Analog Devices executive audience.\n\nImportant context:\n- Target audience: an executive at Analog Devices.\n- Objective: persuade Analog Devices to seriously consider joining, partnering with, or engaging in the EPRI DCFlex initiative.\n- Evaluation focus: not just writing quality, but likelihood of motivating executive action.\n- Judge the documents, not the authors.\n- If the documents contain names or identifying details, do not let those bias the evaluation.\n- If external research is available, use only current, credible sources to understand Analog Devices’ likely executive priorities, market position, and strategic interests. Clearly distinguish document-based observations from externally researched context. If external research is not available, proceed using only the documents and general executive communication principles.\n\nPlease perform the following analysis.\n\nFirst, read both documents fully. Identify what each package appears to contain, such as email copy, cover letter, one-pager, proposal, talking points, briefing memo, slide content, or other materials. Briefly summarize the purpose and structure of each document.\n\nThen evaluate each document using the weighted rubric below. Use a 0–10 raw score for each category, allowing half-points. Convert each raw score into a weighted score using the category weight. Show the math clearly.\n\nScoring scale:\n- 9–10: Exceptional; highly likely to resonate with an executive audience.\n- 7–8.5: Strong; effective with some room for improvement.\n- 5–6.5: Adequate; usable but may not be compelling enough.\n- 3–4.5: Weak; significant concerns or missing elements.\n- 0–2.5: Very poor, absent, confusing, or counterproductive.\n\nRubric, total 100 points:\n\n1. Executive relevance and strategic fit — 12 points  \nAssess whether the package speaks to the priorities of an Analog Devices executive. Does it connect DCFlex to strategic, commercial, technical, operational, sustainability, resilience, or market-positioning concerns that would matter to ADI leadership?\n\n2. Analog Devices-specific personalization and insight — 10 points  \nAssess whether the communication feels tailored to Analog Devices rather than generic. Does it reference ADI’s likely business interests, technologies, customer base, energy needs, semiconductor/manufacturing realities, electrification, grid-interactive opportunities, or partnership rationale in a credible way?\n\n3. Clarity of the DCFlex value proposition — 12 points  \nAssess how clearly the document explains what DCFlex is, why it matters, and what role ADI could play. Does the reader quickly understand the opportunity?\n\n4. Business case and value to Analog Devices — 12 points  \nAssess whether the package explains what ADI gains. Consider financial value, strategic advantage, innovation benefits, customer relevance, operational flexibility, resilience, sustainability, regulatory alignment, thought leadership, and potential market differentiation.\n\n5. Specificity of the ask and next steps — 9 points  \nAssess whether the package makes it easy for an executive to say yes to a concrete next step. Is the ask specific, appropriately sized, and actionable? Does it propose a meeting, pilot, executive briefing, technical discussion, membership path, or other clear action?\n\n6. Credibility, evidence, and substantiation — 10 points  \nAssess whether claims are supported by evidence, logic, examples, data, references, EPRI credibility, industry trends, or plausible reasoning. Penalize vague claims, unsupported superlatives, or overpromising.\n\n7. Persuasiveness, differentiation, and urgency — 8 points  \nAssess whether the package creates a compelling reason to act now. Does it explain why this initiative is distinctive, timely, and worth executive attention compared with other competing priorities?\n\n8. Executive tone and concision — 7 points  \nAssess whether the writing is appropriate for a senior executive. Is it concise, confident, professional, respectful, and direct? Does it avoid unnecessary jargon, academic phrasing, sales hype, or excessive technical detail?\n\n9. Structure, flow, and readability — 7 points  \nAssess whether the document is easy to navigate. Does it lead with the strongest message? Are headings, sequencing, summaries, and transitions effective? Can a busy executive grasp the point quickly?\n\n10. Package completeness and communication effectiveness — 5 points  \nAssess whether the overall package feels complete and usable. Does it include the right materials for outreach? Are there gaps in audience framing, message hierarchy, supporting detail, or follow-up materials?\n\n11. Risk management, factual accuracy, and professionalism — 5 points  \nAssess whether the communication avoids reputational, factual, legal, confidentiality, or relationship risks. Penalize inaccurate assumptions, exaggerated claims, insensitive phrasing, poor formatting, typos, or anything that could reduce trust.\n\n12. Memorability and relationship-building potential — 4 points  \nAssess whether the package leaves a positive impression and opens the door to a relationship. Does it make EPRI and DCFlex feel credible, relevant, and worth continued discussion?\n\nAfter scoring, provide the following output:\n\n1. Executive summary  \nGive a concise overview of which document is stronger and why. State the winner clearly.\n\n2. Scorecard table  \nCreate a table showing:\n- Category\n- Weight\n- Document A raw score\n- Document A weighted score\n- Document B raw score\n- Document B weighted score\n- Winner by category\n- Brief rationale\n\n3. Individual analysis of Document A  \nProvide a thorough analysis of Document A, including:\n- Main strengths\n- Main weaknesses\n- Best moments or strongest passages\n- Missing or underdeveloped elements\n- Risks or concerns\n- Likely executive reaction\n- Specific recommendations to improve it\n\nUse brief excerpts or paraphrased examples from the document to support your points.\n\n4. Individual analysis of Document B  \nProvide the same level of analysis for Document B:\n- Main strengths\n- Main weaknesses\n- Best moments or strongest passages\n- Missing or underdeveloped elements\n- Risks or concerns\n- Likely executive reaction\n- Specific recommendations to improve it\n\nUse brief excerpts or paraphrased examples from the document to support your points.\n\n5. Head-to-head comparison  \nCompare the two documents directly across the most important dimensions:\n- Which better understands Analog Devices?\n- Which better explains DCFlex?\n- Which better makes the business case?\n- Which has the stronger executive ask?\n- Which is more persuasive?\n- Which is more polished?\n- Which is more likely to result in a meeting or engagement?\n\n6. Final winner and rationale  \nName the winner. Provide the final total score for each document out of 100. Explain whether the margin is decisive, moderate, or narrow.\n\nUse this interpretation:\n- 10+ point difference: decisive win\n- 5–9.5 point difference: clear but not overwhelming win\n- 2–4.5 point difference: narrow win\n- Less than 2 points: essentially a tie, but still identify which document has the slight edge\n\n7. Recommended “best combined version”  \nBriefly explain what should be taken from each document to create the strongest possible final package. Identify the top 5 improvements that would make the winning package even stronger.\n\n8. Confidence level  \nState your confidence in the judgment: High, Medium, or Low. Explain what, if anything, would change your assessment.\n\nBe candid and rigorous. Do not default to politeness. The goal is to determine which package is most likely to persuade an Analog Devices executive to engage with EPRI’s DCFlex initiative.", "sourceFiles": ["analysis-prompt(1).md", "ChatGPT-analysis(1).md", "Claude-analysis(1).md", "Gemini-analysis(1).md"], "headline": "Document A wins unanimously across the three frontier-model analyses.", "summary": "Across Gemini, Claude, and ChatGPT, Document A was scored as the stronger executive persuasion package. The consensus rationale was consistent: Document A was much more specifically tailored to Analog Devices, mapped DCFlex to concrete technical and commercial opportunities, and made a clearer next-step ask. Document B earned credit for readability, visual structure, and several useful framing devices, but was judged less personalized and less actionable.", "bestCombined": ["Use Document A as the core because it contains the most ADI-specific strategic substance and strongest meeting-generation logic.", "Borrow Document B’s executive scannability, three-pillar structure, and Flex MOSAIC / market-language framing.", "Add a one-page executive front door that answers: why ADI, why DCFlex, why now, and what decision is requested.", "Move pricing, participation model, and next-step agenda into a clean decision box.", "Add source notes and tighten quantified value claims so the pitch feels credible, not over-assertive."], "transparencyNote": "This competition was built from the uploaded ADI prompt and the three uploaded model analyses."}, "rr": {"id": "rr", "status": "complete", "company": "Rolls-Royce", "targetShort": "Rolls-Royce", "title": "Rolls-Royce Executive Outreach", "subtitle": "Persuading a Rolls-Royce executive to join or engage with EPRI DCFlex", "audience": "Rolls-Royce executive", "docA": {"label": "Document A", "owner": "Arshad", "display": "Document A — Arshad"}, "docB": {"label": "Document B", "owner": "Tony", "display": "Document B — Tony"}, "categories": [{"id": 1, "key": "strategic_fit", "short": "Strategic fit", "name": "Executive relevance and strategic fit", "weight": 12}, {"id": 2, "key": "personalization", "short": "Personalization", "name": "Rolls-Royce-specific personalization and insight", "weight": 10}, {"id": 3, "key": "dcflex_value", "short": "DCFlex value", "name": "Clarity of the DCFlex value proposition", "weight": 12}, {"id": 4, "key": "business_case", "short": "Business case", "name": "Business case and value to Rolls-Royce", "weight": 12}, {"id": 5, "key": "ask", "short": "Ask / next steps", "name": "Specificity of the ask and next steps", "weight": 9}, {"id": 6, "key": "credibility", "short": "Credibility", "name": "Credibility, evidence, and substantiation", "weight": 10}, {"id": 7, "key": "urgency", "short": "Urgency", "name": "Persuasiveness, differentiation, and urgency", "weight": 8}, {"id": 8, "key": "tone", "short": "Executive tone", "name": "Executive tone and concision", "weight": 7}, {"id": 9, "key": "structure", "short": "Structure", "name": "Structure, flow, and readability", "weight": 7}, {"id": 10, "key": "completeness", "short": "Completeness", "name": "Package completeness and communication effectiveness", "weight": 5}, {"id": 11, "key": "risk", "short": "Risk mgmt.", "name": "Risk management, factual accuracy, and professionalism", "weight": 5}, {"id": 12, "key": "memorability", "short": "Memorability", "name": "Memorability and relationship-building potential", "weight": 4}], "models": {"chatgpt": {"label": "ChatGPT 5.5 Pro", "short": "ChatGPT", "source": "RR-Chatgpt-Analysis.md", "accent": "#3ff4ff", "totalA": 80.55, "totalB": 75.6, "confidence": "Medium", "headline": "Document A is the better engagement package; Document B is the cleaner executive memo.", "summary": "ChatGPT judged Document A more likely to persuade Rolls-Royce to take a concrete next step because it is more tailored, more commercially specific, maps to Rolls-Royce Power Systems, SMR, mtu Kinetic PowerPacks, mtu gas gensets, and EnergetIQ, and closes with a technical scoping session. Document B was praised for polish and concise strategic framing but penalized for weaker ask and less actionable conversion path.", "bestA": ["Strong Rolls-Royce-specific mapping across Power Systems, SMR, mtu Kinetic PowerPacks, gas gensets, and EnergetIQ.", "Concrete engagement menu that turns DCFlex into a tangible validation and market-positioning opportunity.", "Specific technical scoping-session ask that an executive can approve or delegate."], "watchoutsA": ["Too dense and technical for a first executive touch.", "Hard factual claims around member count, funding, pricing, and hardware-readiness expansion need verification.", "EPRI validation language should avoid endorsement-adjacent implications."], "bestB": ["Cleaner, more concise executive-note structure.", "Strong thesis that data-center power is shifting from passive backup to active grid-interactive flexibility.", "Effective “shape rather than track” language for emerging operating and procurement frameworks."], "watchoutsB": ["No sufficiently specific meeting, pilot, briefing, or membership path.", "Business case is underdeveloped in executive value terms.", "Narrower focus on Rolls-Royce Power Systems underuses the broader SMR angle."], "rows": [{"categoryId": 1, "aRaw": 9.0, "aWeighted": 10.8, "bRaw": 8.5, "bWeighted": 10.2, "winner": "A", "rationale": "A ties DCFlex to Rolls-Royce Power Systems, SMR, mtu products, validation, customers, and interconnection. B is highly relevant but narrower."}, {"categoryId": 2, "aRaw": 9.0, "aWeighted": 9.0, "bRaw": 8.0, "bWeighted": 8.0, "winner": "A", "rationale": "A is deeply customized around Rolls-Royce divisions, products, market status, and use cases. B is well tailored to RRPS but less granular."}, {"categoryId": 3, "aRaw": 8.0, "aWeighted": 9.6, "bRaw": 8.5, "bWeighted": 10.2, "winner": "B", "rationale": "B explains DCFlex more cleanly and quickly. A gives more detail but becomes complex and potentially confusing."}, {"categoryId": 4, "aRaw": 9.0, "aWeighted": 10.8, "bRaw": 7.5, "bWeighted": 9.0, "winner": "A", "rationale": "A explains independent validation, ecosystem visibility, product differentiation, interconnection value, and membership leverage. B’s business case is credible but less concrete."}, {"categoryId": 5, "aRaw": 9.0, "aWeighted": 8.1, "bRaw": 3.5, "bWeighted": 3.15, "winner": "A", "rationale": "A proposes a technical scoping session and names topics. B makes the case for membership but does not make an actionable ask."}, {"categoryId": 6, "aRaw": 6.5, "aWeighted": 6.5, "bRaw": 7.5, "bWeighted": 7.5, "winner": "B", "rationale": "B is more restrained. A has useful detail but contains several high-risk, hard factual claims that need verification."}, {"categoryId": 7, "aRaw": 8.5, "aWeighted": 6.8, "bRaw": 7.5, "bWeighted": 6.0, "winner": "A", "rationale": "A creates stronger urgency by linking DCFlex to validation, procurement visibility, competitors, and near-term research access. B is persuasive but softer."}, {"categoryId": 8, "aRaw": 5.5, "aWeighted": 3.85, "bRaw": 8.5, "bWeighted": 5.95, "winner": "B", "rationale": "B is concise and executive-friendly. A is dense, technical, and too long for many senior executives as a first-touch document."}, {"categoryId": 9, "aRaw": 7.0, "aWeighted": 4.9, "bRaw": 8.0, "bWeighted": 5.6, "winner": "B", "rationale": "B has a cleaner four-page executive-note structure. A is logically organized but crowded and more like a technical proposal."}, {"categoryId": 10, "aRaw": 8.5, "aWeighted": 4.25, "bRaw": 6.5, "bWeighted": 3.25, "winner": "A", "rationale": "A includes invitation framing, value case, engagement areas, pricing, and next step. B lacks outreach mechanics and conversion path."}, {"categoryId": 11, "aRaw": 5.5, "aWeighted": 2.75, "bRaw": 7.5, "bWeighted": 3.75, "winner": "B", "rationale": "A’s overclaims, unverified program facts, “confidential” label, and endorsement-adjacent wording create risk. B is safer and more measured."}, {"categoryId": 12, "aRaw": 8.0, "aWeighted": 3.2, "bRaw": 7.5, "bWeighted": 3.0, "winner": "A", "rationale": "A gives Rolls-Royce more to react to and discuss. B leaves a positive impression but may not prompt action."}], "fullText": "## 1. Executive summary\n\n**Winner: Document A.** Document A is more likely to persuade a Rolls-Royce executive to take a concrete next step because it is more tailored, more commercially specific, and far stronger on the “what should Rolls-Royce do next?” dimension. It explicitly frames DCFlex as a research partnership, maps the opportunity to Rolls-Royce Power Systems, Rolls-Royce SMR, mtu Kinetic PowerPacks, mtu gas gensets, and mtu EnergetIQ, and ends with a specific technical scoping session. \n\n**Document B is the cleaner executive document.** It is more concise, more polished, and easier for a senior executive to absorb quickly. Its strongest line is the strategic thesis that data-center power is shifting from passive backup to active grid-interactive flexibility, and that Rolls-Royce Power Systems can help shape the operating language rather than merely follow it. But it does not make a sufficiently specific ask, does not explain a membership path, and is less actionable as an outreach package. \n\nExternal context supports the strategic premise of both documents: EPRI describes DCFlex as an initiative to demonstrate how data centers can support and stabilize the grid while improving interconnection and efficiency, and EPRI’s public DCFlex materials emphasize Flex MOSAIC as a shared, performance-based framework to improve “time to power” for data centers and other large loads. ([EPRI Rest Service][1]) Rolls-Royce’s own materials also support the relevance of the topic: Power Systems has highlighted data-center growth, more than 10 GW of installed mtu emergency power gensets, dynamic UPS capability, mtu EnergetIQ, gas gensets, and SMR as part of its data-center energy-transition story. ([Rolls-Royce][2])\n\nOne caution: the rubric mentions “ADI” in two places, but the stated target is Rolls-Royce. I treated those references as copy-paste errors and evaluated fit for Rolls-Royce.\n\n---\n\n## 2. Scorecard table\n\nWeighted score formula: **raw score ÷ 10 × category weight**.\n\n| Category                                                   |  Weight | Document A raw |      Document A weighted | Document B raw |      Document B weighted | Winner | Brief rationale                                                                                                                                                                    |\n| ---------------------------------------------------------- | ------: | -------------: | -----------------------: | -------------: | -----------------------: | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |\n| 1. Executive relevance and strategic fit                   |      12 |            9.0 | 9.0 ÷ 10 × 12 = **10.8** |            8.5 | 8.5 ÷ 10 × 12 = **10.2** | A      | A ties DCFlex to Rolls-Royce Power Systems, SMR, mtu products, validation, customers, and interconnection. B is highly relevant but narrower.                                      |\n| 2. Rolls-Royce-specific personalization and insight        |      10 |            9.0 |                  **9.0** |            8.0 |                  **8.0** | A      | A is deeply customized around Rolls-Royce divisions, products, market status, and use cases. B is well tailored to RRPS but less granular.                                         |\n| 3. Clarity of the DCFlex value proposition                 |      12 |            8.0 |                  **9.6** |            8.5 |                 **10.2** | B      | B explains DCFlex more cleanly and quickly. A gives more detail but becomes complex and potentially confusing.                                                                     |\n| 4. Business case and value to Rolls-Royce                  |      12 |            9.0 |                 **10.8** |            7.5 |                  **9.0** | A      | A explains independent validation, ecosystem visibility, product differentiation, interconnection value, and membership leverage. B’s business case is credible but less concrete. |\n| 5. Specificity of the ask and next steps                   |       9 |            9.0 |                  **8.1** |            3.5 |                 **3.15** | A      | A proposes a technical scoping session and names topics. B makes the case for membership but does not make an actionable ask.                                                      |\n| 6. Credibility, evidence, and substantiation               |      10 |            6.5 |                  **6.5** |            7.5 |                  **7.5** | B      | B is more restrained. A has useful detail but contains several high-risk, hard factual claims that need verification.                                                              |\n| 7. Persuasiveness, differentiation, and urgency            |       8 |            8.5 |                  **6.8** |            7.5 |                  **6.0** | A      | A creates stronger urgency by linking DCFlex to validation, procurement visibility, competitors, and near-term research access. B is persuasive but softer.                        |\n| 8. Executive tone and concision                            |       7 |            5.5 |                 **3.85** |            8.5 |                 **5.95** | B      | B is concise and executive-friendly. A is dense, technical, and too long for many senior executives as a first-touch document.                                                     |\n| 9. Structure, flow, and readability                        |       7 |            7.0 |                  **4.9** |            8.0 |                  **5.6** | B      | B has a cleaner four-page executive-note structure. A is logically organized but crowded and more like a technical proposal.                                                       |\n| 10. Package completeness and communication effectiveness   |       5 |            8.5 |                 **4.25** |            6.5 |                 **3.25** | A      | A includes invitation framing, value case, engagement areas, pricing, and next step. B lacks outreach mechanics and conversion path.                                               |\n| 11. Risk management, factual accuracy, and professionalism |       5 |            5.5 |                 **2.75** |            7.5 |                 **3.75** | B      | A’s overclaims, unverified program facts, “confidential” label, and endorsement-adjacent wording create risk. B is safer and more measured.                                        |\n| 12. Memorability and relationship-building potential       |       4 |            8.0 |                  **3.2** |            7.5 |                  **3.0** | A      | A gives Rolls-Royce more to react to and discuss. B leaves a positive impression but may not prompt action.                                                                        |\n| **Total**                                                  | **100** |                |                 **80.6** |                |                 **75.6** | **A**  | **Document A wins by 5.0 points: clear but not overwhelming.**                                                                                                                     |\n\n---\n\n## 3. Individual analysis of Document A\n\n### Purpose and structure\n\nDocument A is a **research partnership invitation / executive-technical proposal**. It appears designed as a formal package to persuade Rolls-Royce senior leadership to join the DCFlex research consortium. It includes:\n\n* A title page-style invitation.\n* An “About Rolls-Royce” section mapping Civil Aerospace, Defence/Power Systems context, Rolls-Royce SMR, and mtu EnergetIQ to AI data-center power.\n* A DCFlex platform explanation.\n* A member ecosystem table.\n* A proposed hardware-readiness assessment framework.\n* Five specific research and engagement areas.\n* A research-leverage/business-case section.\n* Membership timeline and investment.\n* EPRI independence and confidentiality language.\n* A proposed next step. \n\nThis is the more complete package. It is closer to a proposal than a briefing note.\n\n### Main strengths\n\n**First, Document A shows the strongest understanding of Rolls-Royce’s commercial situation.** It recognizes that Rolls-Royce is not merely a standby-generator supplier; it connects DCFlex to mtu diesel and gas gensets, dynamic UPS, battery systems, energy management software, and SMR. That is directionally aligned with Rolls-Royce’s own positioning: Rolls-Royce says its data-center power portfolio spans diesel generators, gas engines, mtu Kinetic PowerPacks, EnergetIQ, and longer-term SMR, and it describes data-center energy demand as a major growth driver. ([Rolls-Royce][2])\n\n**Second, it makes a much stronger business case.** It gives Rolls-Royce several reasons to engage: independent validation, visibility to hyperscalers and utilities, alignment with interconnection requirements, product differentiation, competitor awareness, and influence over emerging frameworks. The “research leverage” section is particularly effective because it turns membership from a soft collaboration into a leveraged investment.\n\n**Third, it has the clearest ask.** The proposed next step is a technical scoping session with Rolls-Royce Power Systems and Rolls-Royce SMR leadership, focused on selecting priority engagement areas and beginning research-protocol scoping. That is exactly the kind of concrete action an executive can delegate or approve. \n\n**Fourth, it gives specific reasons why DCFlex matters to Rolls-Royce products.** The five engagement areas are the most persuasive part of the package: Kinetic PowerPack voltage-dip ride-through, AI workload fluctuation effects on gas gensets, large load drop-out mitigation, FlexMosaic/EnergetIQ integration, and the SMR baseload case. Those examples make the opportunity tangible.\n\n### Best moments or strongest passages\n\nThe strongest strategic move is the “five areas where Rolls-Royce technologies intersect with DCFlex research.” This section converts DCFlex from an abstract consortium into a concrete validation and market-positioning opportunity. The Kinetic PowerPack and EnergetIQ sections are especially strong because they identify problems a hyperscaler, utility, or interconnection engineer would actually care about: voltage dips, ride-through, load drop-out, telemetry, and standardized flexibility descriptions. \n\nThe proposed next step is also strong because it is specific without asking for an immediate full commitment. A “technical scoping session” is a reasonable executive ask: low-friction, but meaningful.\n\n### Main weaknesses\n\n**The document is too long and dense for a first executive touch.** At roughly ten rendered pages, it asks for too much attention before the executive has agreed that DCFlex deserves time. It reads more like a technical business-development memo than an executive persuasion package.\n\n**It over-specifies before it earns trust.** For example, the detailed three-level “Hardware Readiness Framework,” membership investment, and validation pathway may be persuasive if accurate and authorized, but they also create a lot of factual surface area. If even one element is wrong or premature, the document’s credibility suffers.\n\n**The DCFlex explanation becomes muddier than it needs to be.** Public EPRI materials describe DCFlex as focused on data-center flexibility, grid support, interconnection, and workstreams around design, utility programs, grid planning, energy supply, and distribution-connected data centers. ([DCFlex][3]) Document A adds an “expanded hardware acceleration” and “Hardware Readiness Framework” narrative. That may reflect internal information, but I could not substantiate it from the public sources I found. If it is not officially confirmed, it is a major risk.\n\n### Missing or underdeveloped elements\n\nDocument A should include a **one-page executive summary at the front** with only the core decision logic:\n\n1. Why this matters now.\n2. Why Rolls-Royce is unusually relevant.\n3. What Rolls-Royce gets.\n4. What EPRI is asking for.\n5. What happens next.\n\nIt also needs **source notes or footnotes** for every hard factual claim: membership count, funding, workstream expansion, pricing, competitor participation, EPRI deliverables, and Rolls-Royce product claims.\n\nIt should better distinguish **membership decision** from **technical scoping decision**. A senior executive may be willing to approve a 30-minute briefing or designate a technical sponsor before considering a $750,000 commitment. Asking for both too quickly could slow the process.\n\n### Risks or concerns\n\nThe biggest risk is **factual overreach**. Public materials I found support DCFlex’s broad purpose, Flex MOSAIC, and the nine demonstration sites, but they do not publicly substantiate all of Document A’s claims about a $25 million platform, an April 2026 hardware-readiness expansion, a 75-member collaboration, or the exact membership economics. EPRI’s public project notice lists pricing categories and a three-year timeline, but not the same “$750,000 membership” framing used by Document A. ([EPRI Rest Service][1])\n\nThe second risk is **endorsement-adjacent wording**. Document A says EPRI validation can become a “market credential,” while later clarifying that EPRI is independent and does not advocate for Rolls-Royce. That clarification is good, but the overall package should be careful not to imply that EPRI will validate Rolls-Royce products in a promotional sense. EPRI’s Flex MOSAIC page explicitly says the framework is informational, non-binding, and not a standard or coordination mechanism. ([DCFlex][4])\n\nThe third risk is **executive overload**. The document may be too technical for a corporate executive and too strategic for a lab engineer. It needs a sharper division between executive brief and technical annex.\n\n### Likely executive reaction\n\nA Rolls-Royce Power Systems or SMR executive would likely think: **“This is clearly relevant, and EPRI has done its homework.”** The document would probably earn internal forwarding to strategy, product management, engineering, or government/regulatory affairs.\n\nBut the same executive may also think: **“I need my team to verify these claims before I engage.”** The level of detail helps persuasion, but it also raises scrutiny.\n\n### Specific recommendations to improve Document A\n\n1. **Compress the front end to two pages.** Keep the current document as an annex.\n2. **Move the ask to the first page.** State: “We propose a 45-minute executive briefing followed by a technical scoping session.”\n3. **Fact-check and footnote all hard claims.** Especially membership count, pricing, workstreams, funding, demonstration partners, and hardware-readiness scope.\n4. **Soften overclaims.** Replace “only,” “world’s largest,” “complete ecosystem,” and “credential” language unless directly supportable.\n5. **Convert the five engagement areas into a prioritization menu.** Label them “Option 1: KPP validation,” “Option 2: EnergetIQ/Flex MOSAIC,” etc.\n6. **Separate Power Systems and SMR pathways.** They have different time horizons, buyers, regulatory contexts, and budgets.\n7. **Add a decision path.** Example: briefing → technical scoping → NDA/IP protocol → pilot candidate selection → membership decision.\n\n---\n\n## 4. Individual analysis of Document B\n\n### Purpose and structure\n\nDocument B is a **concise executive note / strategic briefing memo** for Rolls-Royce Power Systems. It is four pages and includes:\n\n* A cover/title section.\n* Executive summary.\n* “What DCFlex Is Building.”\n* “Why This Matters for Rolls-Royce Power Systems.”\n* A DCFlex-to-RRPS relevance table.\n* An RRPS/mtu portfolio mapping table.\n* A short case for RRPS membership.\n* Appendix with workstreams and demonstration themes. \n\nThis is a better executive read than Document A, but a less complete persuasion package.\n\n### Main strengths\n\n**Document B leads with the right executive thesis.** The opening idea that data-center power is shifting “from passive emergency backup to active, grid-interactive flexibility” is excellent. It immediately reframes Rolls-Royce’s role from equipment supplier to strategic infrastructure participant. \n\n**It is concise and readable.** A busy executive could understand the argument in one sitting. The structure is clean: market shift, DCFlex role, Rolls-Royce fit, portfolio mapping, case for membership.\n\n**It uses strong strategic language without sounding too promotional.** Phrases like “shape rather than track” and “operating language” are effective because they connect participation to influence, not just attendance.\n\n**It is better at executive tone.** The document is confident, measured, and polished. It avoids some of the more technical sprawl that weakens Document A.\n\n### Best moments or strongest passages\n\nThe strongest passage is the executive-summary framing that DCFlex is where the operating language of grid-interactive data-center power is being formed, and that this language may influence tariffs, interconnection rules, and procurement specifications. That is exactly the kind of strategic logic an executive can understand quickly. \n\nThe “Why This Matters for Rolls-Royce Power Systems” table is also strong. It does a good job connecting DCFlex observations to Rolls-Royce implications, especially the idea that on-site generation, storage, and controls are becoming part of the interconnection proposition rather than equipment adjacent to it.\n\n### Main weaknesses\n\n**The ask is too weak.** Document B makes a case for membership, but it does not ask for a meeting, identify a sponsor, propose a briefing, define a pilot, mention membership economics, or give the executive an easy “yes.” This is the single biggest reason it loses.\n\n**The business case is underdeveloped.** It says Rolls-Royce can shape frameworks and translate operating evidence into the language utilities and hyperscalers are adopting. That is valid, but it does not fully explain the value in executive terms: revenue growth, procurement advantage, customer interconnection speed, product validation, lifecycle service pull-through, differentiation from Caterpillar/INNIO/Schneider, or strategic positioning in the data-center power transition.\n\n**It is narrower than Document A.** It is focused on Rolls-Royce Power Systems and only briefly mentions SMR. That may be appropriate for an RRPS executive, but if the target is “Rolls-Royce senior executive leadership,” it misses a chance to link DCFlex to the broader transformation, nuclear, and long-term clean-power agenda. Rolls-Royce has publicly highlighted SMR progress, including selection for UK SMR units and Czech deployment activity, so there is a credible corporate-level angle if handled carefully. ([Rolls-Royce][5])\n\n### Missing or underdeveloped elements\n\nDocument B needs:\n\n* A direct meeting request.\n* A named next step: executive briefing, technical workshop, demonstration discussion, or membership pathway.\n* A short “what Rolls-Royce gets” box.\n* A clearer explanation of EPRI deliverables and access rights.\n* A concise membership or engagement pathway.\n* A more specific technical hook, such as Kinetic PowerPack validation or EnergetIQ/Flex MOSAIC alignment.\n\n### Risks or concerns\n\nDocument B is lower risk than Document A, but it still contains claims that should be verified. Public EPRI sources support the nine demonstration sites and the DCFlex/Flex MOSAIC concept, but public materials I found vary on the number of workstreams and do not clearly substantiate the “six workstreams / hardware-readiness” framing. EPRI’s public DCFlex homepage displays five workstreams, while an EPRI project notice describes the initiative differently and lists deliverables across WS1–WS4. ([DCFlex][3])\n\nThe document also uses some strong claims such as interconnection waits of three to ten years and the idea that DCFlex language will be inherited by tariffs and procurement specifications. Those claims are plausible, but they need evidence or softer phrasing.\n\n### Likely executive reaction\n\nA Rolls-Royce Power Systems executive would likely react positively: **“This is relevant, strategically framed, and worth knowing about.”** But because the document does not ask for a specific action, the likely outcome is passive interest rather than immediate engagement.\n\nIt is more likely to be read than Document A. It is less likely to produce a meeting unless accompanied by a strong email or call-to-action.\n\n### Specific recommendations to improve Document B\n\n1. **Add a clear ask at the end of the executive summary and in the closing paragraph.**\n2. **Add a “What RRPS gets from DCFlex” box** with three to five tangible benefits.\n3. **Borrow Document A’s concrete engagement areas**, especially KPP ride-through testing, AI workload impacts on gas gensets, and EnergetIQ/Flex MOSAIC integration.\n4. **Add a simple engagement path:** 30-minute executive briefing → technical scoping → membership/pilot decision.\n5. **Add citations or footnotes** for all hard claims.\n6. **Include one sentence on SMR as a longer-horizon adjacency**, without letting it distract from Power Systems.\n7. **End with an action sentence**, not a general membership case.\n\n---\n\n## 5. Head-to-head comparison\n\n**Which better understands Rolls-Royce?**\n**Document A.** It understands Rolls-Royce as a multi-division company with current data-center power products and a longer-term SMR strategy. Document B understands Rolls-Royce Power Systems well, but it is narrower.\n\n**Which better explains DCFlex?**\n**Document B, slightly.** It explains the core DCFlex idea more cleanly: data-center flexibility, Flex MOSAIC, demonstrations, and the shift to grid-interactive power. Document A provides more detail but risks confusing the reader with expanded workstream and hardware-readiness claims.\n\n**Which better makes the business case?**\n**Document A.** It gives a clearer “what Rolls-Royce gets” story: independent assessment, buyer visibility, interconnection relevance, product differentiation, and technical evidence.\n\n**Which has the stronger executive ask?**\n**Document A by a wide margin.** It proposes a technical scoping session and identifies specific topics. Document B does not provide a real conversion step.\n\n**Which is more persuasive?**\n**Document A**, because it creates more reasons to act. But Document B is more elegant and may be better for first exposure.\n\n**Which is more polished?**\n**Document B.** It is cleaner, tighter, and more executive-friendly.\n\n**Which is more likely to result in a meeting or engagement?**\n**Document A.** Despite its flaws, it gives the executive something to approve, forward, or delegate. Document B may be admired and then set aside.\n\n---\n\n## 6. Final winner and rationale\n\n**Final score:**\n\n* **Document A: 80.6 / 100**\n* **Document B: 75.6 / 100**\n\n**Winner: Document A.**\n\nThe margin is **5.0 points**, which is a **clear but not overwhelming win** under your interpretation scale.\n\nDocument A wins because the objective is not merely to produce the better-written executive note; the objective is to persuade Rolls-Royce to seriously consider joining, partnering with, or engaging in DCFlex. On that standard, Document A is more action-oriented, more customized, and more commercially useful. Its weaknesses are significant: it needs fact-checking, compression, and risk reduction. But its core persuasion architecture is stronger.\n\nDocument B is the better executive memo. Document A is the better engagement package.\n\n---\n\n## 7. Recommended “best combined version”\n\nThe strongest final package should combine **Document B’s executive clarity** with **Document A’s specificity and ask**.\n\nUse Document B for:\n\n* The opening strategic thesis.\n* The concise executive tone.\n* The “shape rather than track” framing.\n* The RRPS portfolio mapping.\n* The cleaner visual structure.\n\nUse Document A for:\n\n* The specific Rolls-Royce product relevance.\n* The five engagement areas.\n* The ecosystem/member rationale.\n* The independent-validation argument.\n* The proposed technical scoping session.\n\nTop five improvements to make the winning package stronger:\n\n1. **Create a two-page executive brief plus technical annex.** The executive should not have to read ten pages to understand the decision.\n2. **Put the ask on page one.** “EPRI proposes a 45-minute executive briefing followed by a technical scoping session on two to three priority use cases.”\n3. **Verify every hard claim.** Especially workstream count, hardware-readiness scope, member count, membership cost, funding, demonstration partners, and “only/first/largest” claims.\n4. **Translate value into executive outcomes.** Tie DCFlex to data-center revenue growth, faster customer interconnections, product differentiation, procurement influence, lower-carbon credibility, and resilience.\n5. **Reduce EPRI endorsement risk.** Make clear that EPRI provides independent research, not product advocacy, certification, or guaranteed favorable validation.\n\n---\n\n## 8. Confidence level\n\n**Confidence: Medium.**\n\nI am confident that Document A is stronger as a persuasion package and Document B is stronger as an executive note. The main uncertainty is factual: several of Document A’s most compelling claims appear to depend on internal or non-public DCFlex information that I could not verify from public sources. If those claims are fully accurate and authorized, Document A’s score would rise. If they are inaccurate or premature, Document B could become the safer choice despite its weaker ask.\n\n[1]: https://restservice.epri.com/publicdownload/000000003002031004/0/Product \"DCFlex: Data Center Flexible Load Initiative\"\n[2]: https://www.rolls-royce.com/media/our-stories/discover/2025/powering-data-centres-through-the-energy-transition.aspx \"\n\tPowering data centres through the energy transition | Rolls-Royce\n\"\n[3]: https://dcflex.epri.com/ \"Homepage | DCFlex\"\n[4]: https://dcflex.epri.com/flex-mosaic \"Flex MOSAIC™ | DCFlex\"\n[5]: https://www.rolls-royce.com/media/press-releases/2025/10-06-2025-rr-welcomes-great-british-nuclear-decision-on-smrs.aspx \"\n\tRolls-Royce welcomes Great British Nuclear decision on SMRs | Rolls-Royce\n\"\n"}, "claude": {"label": "Claude Opus 4.7", "short": "Claude", "source": "RR-Claude-Analysis.md", "accent": "#a073ff", "totalA": 76.95, "totalB": 72.8, "confidence": "Medium–High", "headline": "Document A wins narrowly on actionability and whole-of-company fit.", "summary": "Claude saw a close competition: Document A wins because it covers Power Systems, Rolls-Royce SMR, and mtu EnergetIQ, proposes five concrete technical engagement areas, names membership mechanics, and ends with a defined next step. Document B was judged more executive-credible, restrained, and elegant, but hurt by missing SMR depth and not giving the executive a clear path to yes.", "bestA": ["Whole-of-company scoping across Power Systems, SMR, and EnergetIQ.", "Five named engagement areas with specific Rolls-Royce products and DCFlex research mechanisms.", "Decision-readiness: pricing, payment structure, IP/independence framing, and a concrete scoping session."], "watchoutsA": ["The “two-workstream / scope expansion” framing is a credibility risk if WS6 is already part of DCFlex.", "Unattributed $25M / ~75-member claims need citation or hedging.", "Engineering density should move into an annex for the executive audience."], "bestB": ["Most polished executive prose and peer-level briefing tone.", "Strong “operating language” framing around tariffs, interconnection rules, and procurement specifications.", "Clean convergence table and faithful WS1–WS6 / Flex MOSAIC architecture."], "watchoutsB": ["Rolls-Royce SMR is underdeveloped despite being strategically central to the market story.", "No specific ask, named counterpart, date window, or membership mechanics.", "Demonstration examples are listed but not tied to mtu or RRPS opportunities."], "rows": [{"categoryId": 1, "aRaw": 9.0, "aWeighted": 10.8, "bRaw": 7.0, "bWeighted": 8.4, "winner": "A", "rationale": "A covers all three relevant Rolls-Royce divisions including SMR; B scopes to RRPS only and ignores SMR."}, {"categoryId": 2, "aRaw": 9.0, "aWeighted": 9.0, "bRaw": 6.5, "bWeighted": 6.5, "winner": "A", "rationale": "A names recent contracts (Wylfa, CEZ, GBN), 50% segment growth, $24M US plant investment, 45-second 20V4000. B maps products generically."}, {"categoryId": 3, "aRaw": 6.5, "aWeighted": 7.8, "bRaw": 8.5, "bWeighted": 10.2, "winner": "B", "rationale": "B explains all six workstreams and Flex MOSAIC cleanly. A's \"two-workstream / scope expansion\" framing is muddled and arguably inaccurate."}, {"categoryId": 4, "aRaw": 8.5, "aWeighted": 10.2, "bRaw": 6.5, "bWeighted": 7.8, "winner": "A", "rationale": "A spells out validation, ecosystem visibility, BYOF positioning, $25M leverage. B argues \"shape rather than track\" but doesn't quantify gain."}, {"categoryId": 5, "aRaw": 8.0, "aWeighted": 7.2, "bRaw": 4.0, "bWeighted": 3.6, "winner": "A", "rationale": "A proposes a named scoping session and lists pricing options. B ends with sentiment, no ask, no contact path."}, {"categoryId": 6, "aRaw": 7.5, "aWeighted": 7.5, "bRaw": 8.5, "bWeighted": 8.5, "winner": "B", "rationale": "B is carefully hedged (\"subject to programme fit\", \"informational and non-binding\"). A's \"$25M / ~75 members\" and \"scope expansion\" framing are sales-flavored and inconsistent with B's \"more than 65 organisations\"."}, {"categoryId": 7, "aRaw": 7.5, "aWeighted": 6.0, "bRaw": 7.5, "bWeighted": 6.0, "winner": "Tie", "rationale": "Different mechanisms — A uses concrete near-term hooks; B uses the \"shape the language\" frame. Both effective."}, {"categoryId": 8, "aRaw": 5.5, "aWeighted": 3.85, "bRaw": 8.5, "bWeighted": 5.95, "winner": "B", "rationale": "B is taut and senior. A is dense and sometimes technically over-detailed (E1–E5 read like a scoping memo, not an invitation)."}, {"categoryId": 9, "aRaw": 6.5, "aWeighted": 4.55, "bRaw": 8.0, "bWeighted": 5.6, "winner": "B", "rationale": "B leads with executive summary, finishes with closing case; clean. A is well-organized but long with overlapping sections."}, {"categoryId": 10, "aRaw": 8.5, "aWeighted": 4.25, "bRaw": 6.0, "bWeighted": 3.0, "winner": "A", "rationale": "A includes pricing, next steps, IP framing, assessment framework. B is a standalone note without these."}, {"categoryId": 11, "aRaw": 6.0, "aWeighted": 3.0, "bRaw": 8.5, "bWeighted": 4.25, "winner": "B", "rationale": "A's reframing of WS6 as a special \"expansion bonus\" is risky if a Rolls-Royce reader cross-checks. B's restraint reduces risk surface."}, {"categoryId": 12, "aRaw": 7.0, "aWeighted": 2.8, "bRaw": 7.5, "bWeighted": 3.0, "winner": "B", "rationale": "B's \"language of flexibility\" is the more durable executive sticky-note. A is memorable through specifics."}], "fullText": "# DCFlex Outreach Package Evaluation: Rolls-Royce Target\n\n*Note: The rubric references \"ADI\" in two places, which I've read as drafting residue from a prior evaluation; I've evaluated both packages strictly against the stated target — a Rolls-Royce executive — throughout.*\n\n---\n\n## 1. Executive Summary\n\n**Document A wins, but the margin is narrow (≈4 points), and it is genuinely a near-run thing.**\n\nDocument A is the more **executive-actionable** package: it captures all of Rolls-Royce's relevant strategic surface area (Power Systems, Rolls-Royce SMR, mtu EnergetIQ), proposes five concrete technical engagement areas with named EPRI assets behind them (the waveform library, PSCAD modeling), names a specific dollar figure and payment structure, and ends with a defined next step. An executive reading it knows what they would be saying yes to.\n\nDocument B is the more **executive-credible** document: tighter prose, more restrained claims, sharper strategic framing (\"the operating language being formed inside DCFlex... is the language that subsequent tariffs, interconnection rules and procurement specifications tend to inherit\"), better fidelity to DCFlex's actual six-workstream architecture, and an overall tone that reads as a peer-level briefing rather than a sell.\n\nDocument A wins because senior executives reward **clarity, scope coverage, and ease of decision** over elegance — and because Document B makes a structurally surprising omission: it never mentions Rolls-Royce SMR despite SMR being one of the most strategically loaded assets the company holds in this exact market. That omission alone shaves 6–8 points off Document B's relevance scores. Document A's risks are real (some sales-construct framing of \"scope expansion,\" a \"$25M / ~75 members\" claim that conflicts with Document B's \"65 organisations\"), but they are recoverable in a follow-up; Document B's missing SMR thread and missing ask are not recoverable in the document itself.\n\n**Final scores: Document A = 76.95 / 100. Document B = 72.80 / 100. Margin = 4.15 (narrow win).**\n\n---\n\n## 2. Scorecard\n\nWeighted score = (raw / 10) × category weight.\n\n| # | Category | Wt | A raw | A wtd | B raw | B wtd | Winner | Brief rationale |\n|---|---|---|---|---|---|---|---|---|\n| 1 | Executive relevance & strategic fit | 12 | 9.0 | 10.80 | 7.0 | 8.40 | **A** | A covers all three relevant Rolls-Royce divisions including SMR; B scopes to RRPS only and ignores SMR. |\n| 2 | Rolls-Royce-specific personalization | 10 | 9.0 | 9.00 | 6.5 | 6.50 | **A** | A names recent contracts (Wylfa, CEZ, GBN), 50% segment growth, $24M US plant investment, 45-second 20V4000. B maps products generically. |\n| 3 | Clarity of DCFlex value proposition | 12 | 6.5 | 7.80 | 8.5 | 10.20 | **B** | B explains all six workstreams and Flex MOSAIC cleanly. A's \"two-workstream / scope expansion\" framing is muddled and arguably inaccurate. |\n| 4 | Business case & value to Rolls-Royce | 12 | 8.5 | 10.20 | 6.5 | 7.80 | **A** | A spells out validation, ecosystem visibility, BYOF positioning, $25M leverage. B argues \"shape rather than track\" but doesn't quantify gain. |\n| 5 | Specificity of ask & next steps | 9 | 8.0 | 7.20 | 4.0 | 3.60 | **A** | A proposes a named scoping session and lists pricing options. B ends with sentiment, no ask, no contact path. |\n| 6 | Credibility, evidence, substantiation | 10 | 7.5 | 7.50 | 8.5 | 8.50 | **B** | B is carefully hedged (\"subject to programme fit\", \"informational and non-binding\"). A's \"$25M / ~75 members\" and \"scope expansion\" framing are sales-flavored and inconsistent with B's \"more than 65 organisations\". |\n| 7 | Persuasiveness, differentiation, urgency | 8 | 7.5 | 6.00 | 7.5 | 6.00 | **Tie** | Different mechanisms — A uses concrete near-term hooks; B uses the \"shape the language\" frame. Both effective. |\n| 8 | Executive tone & concision | 7 | 5.5 | 3.85 | 8.5 | 5.95 | **B** | B is taut and senior. A is dense and sometimes technically over-detailed (E1–E5 read like a scoping memo, not an invitation). |\n| 9 | Structure, flow, readability | 7 | 6.5 | 4.55 | 8.0 | 5.60 | **B** | B leads with executive summary, finishes with closing case; clean. A is well-organized but long with overlapping sections. |\n| 10 | Package completeness | 5 | 8.5 | 4.25 | 6.0 | 3.00 | **A** | A includes pricing, next steps, IP framing, assessment framework. B is a standalone note without these. |\n| 11 | Risk, accuracy, professionalism | 5 | 6.0 | 3.00 | 8.5 | 4.25 | **B** | A's reframing of WS6 as a special \"expansion bonus\" is risky if a Rolls-Royce reader cross-checks. B's restraint reduces risk surface. |\n| 12 | Memorability & relationship-building | 4 | 7.0 | 2.80 | 7.5 | 3.00 | **B** | B's \"language of flexibility\" is the more durable executive sticky-note. A is memorable through specifics. |\n| | **TOTAL** | **100** | | **76.95** | | **72.80** | **A** | **Narrow win for A (4.15-point margin).** |\n\nA wins 5 categories, B wins 6, with one tie — but A's wins are concentrated in the heaviest-weighted categories (1, 2, 4, 5 = 43 points of the 100), which is why A leads on totals despite winning fewer categories.\n\n---\n\n## 3. Document A — Individual Analysis\n\n### What it is\nA long-form invitation/briefing document for \"Rolls-Royce Senior Executive Leadership,\" structured as: company-context table covering three Rolls-Royce divisions → DCFlex platform overview (with a \"two-workstream\" framing) → DCFlex membership categories → three-level assessment framework → five named engagement areas (E1–E5) → research-leverage discussion → membership pricing → EPRI's role/IP framing → proposed next step. Roughly 8–10 pages of substantive content. It functions as a standalone read-and-decide package.\n\n### Main strengths\n\n**Whole-of-company scoping.** Document A is the only one of the two that recognizes Rolls-Royce is more than RRPS for this conversation. Pulling Rolls-Royce SMR into the frame is materially correct: SMR is precisely the long-horizon, low-carbon baseload story that a hyperscaler/utility audience inside DCFlex is currently trying to model, and Rolls-Royce SMR is unusually well-positioned (multiple contractual commitments in Europe). A senior Rolls-Royce executive will instantly notice if SMR is missing from a pitch about AI-data-center power; Document A doesn't make that mistake.\n\n**Engagement specificity.** The five engagement areas (E1: KPP voltage-dip ride-through against EPRI's recorded waveform library; E2: AI-workload load-step impact on mtu gas gensets; E3: KPP as active grid buffer for load drop-out; E4: EnergetIQ as a BYOF / Flex MOSAIC-compliant platform; E5: Rolls-Royce SMR's pre-procurement positioning) are the strongest single section in either document. Each one names a specific RRPS product, a specific DCFlex research mechanism, and a specific commercial/regulatory output. This is the section that earns the meeting.\n\n**Decision-readiness.** A reader can move forward without writing back for clarification: pricing is on the page ($750K lump or $250K × 3), the ask is explicit (a technical scoping session with Power Systems and SMR leadership), and the IP/independence terms are pre-framed.\n\n**Three-level framework as a credibility scaffold.** Distinguishing Level 1 (paper) from Level 2 (pilot) from Level 3 (industry-adopted specs) honestly tells the executive what's in scope under DCFlex membership versus what is downstream — this is the kind of structural clarity that builds trust.\n\n### Main weaknesses\n\n**The \"two-workstream / scope expansion\" framing is the single biggest credibility problem.** Document A repeatedly characterizes the Hardware Readiness work as a \"scope expansion... funded separately, staffed separately\" that members \"joining now receive at no additional cost.\" Document B's appendix lists Hardware Readiness as **WS6** alongside WS1–WS5 — i.e., a normal workstream in DCFlex's architecture, not a bonus. If a Rolls-Royce executive cross-checks (and they will, or someone on their team will), this framing reads as packaging a standard inclusion as a limited-time offer. That's the kind of detail that erodes trust on the second read.\n\n**Numerical inconsistencies that an attentive reader will notice.** Document A says \"approximately 75-member collaboration\" and \"$25 million research platform\"; Document B says \"more than 65 organisations.\" Even allowing for growth between the two documents' drafting, the ~75 figure is unsourced and the $25M figure has no provenance in the document. These should either be cited or hedged.\n\n**Density crowds out the senior reader.** The E1–E3 entries in particular drift into engineering-memo territory — governor response, combustion dynamics, fuel delivery interactions, protective relay coordination, PSCAD modeling. This is excellent material for a follow-up technical scoping pack, but it pushes the cognitive load of the executive read above where it should be. An exec skimming for \"should I take this meeting?\" hits a paragraph about flywheels and may park the document.\n\n**Some claims overreach.** \"DCFlex is the world's largest data center and grid flexibility research collaboration\" is the kind of superlative that invites pushback. The \"only major product combining emergency generation and dynamic UPS in a single portfolio\" is plausible but should be attributed to Rolls-Royce's own marketing rather than asserted as fact.\n\n**Confidentiality marker without clear confidentiality.** \"CONFIDENTIAL · FOR ROLLS-ROYCE SENIOR EXECUTIVE LEADERSHIP\" is theater unless the document actually contains confidential material. It does not. This is a small but irritating note for a senior reader.\n\n### Best moments\n\n- The five-engagement-area section, especially **E1** (KPP × EPRI waveform library): this is the cleanest articulation in either document of \"here is a specific thing only EPRI can do for a specific RRPS product.\"\n- The **E5 SMR** rationale — \"the equivalent of the utility pre-application engagement that nuclear projects traditionally conduct — in a research rather than regulatory context, with the most commercially relevant stakeholders already assembled\" — is genuinely insightful and specific to Rolls-Royce SMR's situation.\n- The three-level assessment framework is a useful piece of intellectual honesty.\n\n### Missing or underdeveloped\n\n- No reference to **Rolls-Royce's stated medium-term financial framework** (margin targets, cash flow ambitions) that would let an executive map DCFlex participation to corporate priorities.\n- No mention of **competitor Caterpillar** being inside DCFlex even though Caterpillar appears in the member table — this is a dog that doesn't bark; it should be a near-explicit prompt.\n- No **risk framing** beyond IP — what happens if pilot results are unflattering? A senior reader asks this.\n- No **named EPRI counterparts** or named Rolls-Royce sponsors — the \"Proposed Next Step\" is faceless.\n\n### Risks/concerns\n\n- The \"scope expansion\" packaging risk (above) is the single most damaging element if scrutinized.\n- The 75-organization / $25M figures need attribution.\n- Some of the technical assertions in E1–E3 should be vetted by an EPRI engineer before sending; if a Rolls-Royce technical reviewer questions them, Document A's authority drops sharply.\n\n### Likely executive reaction\n\n**Positive in the first read; mixed on the second.** A Rolls-Royce executive — particularly one with corporate visibility across Power Systems and SMR — will recognize that the author has done their homework, will be drawn to E1/E5, and will be inclined to take the scoping meeting. On a second pass, or after a staffer's review, the \"scope expansion\" framing and the unattributed numbers may downgrade the impression from \"compelling\" to \"earnest but oversold.\" Net likely outcome: **meeting accepted**, but the author may have to walk back some of the framing on the call.\n\n### Specific recommendations\n\n1. **Drop the \"scope expansion / two-workstream\" frame.** Replace it with an honest WS1–WS6 description (mirroring how DCFlex actually presents itself). This recovers credibility at no cost to the value proposition.\n2. **Cite or hedge the numbers.** \"Approximately 75 organizations (per EPRI's [date] update)\" and \"approximately $25M in cumulative committed research funding\" — or, if those numbers can't be sourced, use the safer \"more than 65 organizations\" that is publicly defensible.\n3. **Compress E1–E5 by ~40%.** Move the engineering depth into a separate one-page-per-area technical annex, and keep the main package's engagement-area entries to a tight paragraph each.\n4. **Add a Caterpillar/INNIO sentence** acknowledging that direct competitors are already inside, so RRPS's absence is increasingly visible.\n5. **Replace the standalone confidentiality stamp** with neutral framing (\"Prepared for discussion with Rolls-Royce\") and add named EPRI and proposed Rolls-Royce points-of-contact.\n\n---\n\n## 4. Document B — Individual Analysis\n\n### What it is\nA four-page executive note titled \"DCFlex and Rolls-Royce Power Systems,\" structured as: executive summary → \"What DCFlex Is Building\" (workstreams + Flex MOSAIC + demonstrations) → \"Why This Matters for Rolls-Royce Power Systems\" (a four-row convergence table) → \"RRPS Portfolio and DCFlex Mapping\" (a portfolio-to-workstream mapping table) → \"The Case for RRPS Membership\" (closing rationale) → Appendix A (workstreams + demonstration themes). It functions as a briefing note, not a decision package.\n\n### Main strengths\n\n**Strategic framing of why DCFlex matters even when it's \"non-binding.\"** The single best paragraph in either document is in Document B's executive summary: it acknowledges that DCFlex outputs are informational and non-binding, then immediately reframes — *the operating language being formed inside DCFlex is the language that subsequent tariffs, interconnection rules and procurement specifications tend to inherit*. This is a sophisticated argument that respects the executive's intelligence and makes the case for participation in regulatory/standards-shaping language rather than near-term ROI. It is the most quotable line in either package.\n\n**Convergence table.** The four-row \"DCFlex observation / Relevance / Implication\" table is a structurally elegant device. Each row connects a specific DCFlex feature to a specific RRPS portfolio strength to a specific commercial implication. It compresses what Document A spends pages on into roughly half a page.\n\n**Restraint and credibility.** The document is conspicuously careful: \"subject to programme fit and mutual interest,\" \"DCFlex is where the framing of those commitments is being developed,\" explicit attribution of the \"informational and non-binding\" character. A senior reader reads Document B and concludes the author is not over-claiming.\n\n**Fidelity to the actual DCFlex architecture.** Six workstreams correctly named, Flex MOSAIC correctly framed, demonstration partner list correctly sourced to EPRI's February 2026 announcement.\n\n**Tone is genuinely executive.** Document B reads as if written by someone who has briefed a board before. Sentences are short, structured, and stripped of hedging filler. No superlatives, no \"world's largest,\" no \"transformational opportunity.\"\n\n### Main weaknesses\n\n**No Rolls-Royce SMR thread. At all.** This is the biggest single flaw in either document. Rolls-Royce's SMR business is exactly the kind of asset DCFlex's hardware-readiness work, long-horizon resource planning, and AI-baseload conversations are calibrated for. A Rolls-Royce executive reading Document B will feel one of two things: that the author doesn't fully understand Rolls-Royce, or that the author chose to scope only to Power Systems for reasons not made clear. Neither helps the case. (Document B does mention \"SMR direction\" in a single line of the portfolio-mapping table — but this is a structural omission relative to Document A's E5 treatment.)\n\n**No specific ask.** The closing \"Membership offers a constructive route to contribute that evidence early, work alongside hyperscalers, utilities and regulators... and help shape — rather than track — how credible, lower-carbon, grid-interactive data-centre power is described and procured\" is rhetorically satisfying but operationally vacuous. There's no proposed meeting, no named contact, no pricing, no path-to-yes. The executive has to write back to find out what would happen next.\n\n**No price, no membership mechanics.** Document A names a $750K membership fee and a 3-year payment schedule; Document B says nothing. A senior executive can't assess scale of commitment from Document B alone.\n\n**Light on what RRPS specifically gets.** Document B is strong on \"why this is happening\" and \"where RRPS fits the language\" but soft on \"what is delivered to RRPS.\" Document A's research-leverage section (ecosystem visibility, technical research base, validation as market credential) has no real counterpart in Document B.\n\n**Underused demonstrations.** The HVO Dallas, London utility-AI compute, and AI-platform control demos are powerful proof points and are listed in the appendix but never tied to a specific RRPS opportunity. Document A's E1–E5 do exactly this work; Document B leaves it for the reader.\n\n### Best moments\n\n- The executive-summary reframe of \"non-binding\" outputs into \"the operating language that tariffs and procurement inherit.\" This is the strongest single sentence in either document.\n- The closing summary line: \"shape — rather than track — how credible, lower-carbon, grid-interactive data-centre power is defined.\" A perfect executive sticky-note.\n- The four-row convergence table — a model of compressed analysis.\n\n### Missing or underdeveloped\n\n- Rolls-Royce SMR as a separate thread (not just a one-line appendix-table mention).\n- A specific ask, named counterpart(s), and a date.\n- Pricing / membership mechanics.\n- A concrete demonstration tie-in (e.g., HVO Dallas pairs naturally with mtu's HVO portfolio — unmade connection).\n- Anything addressing IP, confidentiality, or governance — important for any senior executive evaluating an industry consortium.\n\n### Risks/concerns\n\n- The SMR omission is a strategic risk: it can cause a Rolls-Royce reader to conclude the EPRI side hasn't fully understood Rolls-Royce's own AI-data-center thesis (gas as bridge, SMR as long-term baseload).\n- Without a specific ask, the document risks becoming a FYI that goes into a folder rather than triggering action.\n\n### Likely executive reaction\n\n**Positive impression of the author and the institution; uncertain on what to do next.** A Rolls-Royce executive will respect Document B's tone and analytic quality, may quote the \"non-binding language\" line in a follow-up internal email, and will likely want to forward it to a specific person inside Power Systems for next steps. But because no specific next step is proposed, the document's effective conversion rate is dependent on the executive volunteering one — which in busy executive workflows is the failure mode. Net likely outcome: **filed, possibly forwarded, may not directly trigger a meeting**.\n\n### Specific recommendations\n\n1. **Add a fifth row to the convergence table** addressing Rolls-Royce SMR in the DCFlex hardware-readiness context. Even one well-constructed row covers most of the strategic gap.\n2. **Add a one-paragraph \"Proposed Engagement\"** before \"The Case for RRPS Membership,\" naming a specific scoping conversation, a date window, and named counterparts on each side.\n3. **Add membership scale** — at least an indicative range, with a footnote pointing to a separate cover note for the precise structure.\n4. **Tie at least two demonstrations to mtu products by name** — HVO Dallas → mtu HVO; London utility-AI compute → mtu EnergetIQ.\n5. **Add a \"What RRPS gets\" three-bullet block** — visibility into emerging hardware competitors being assessed, independent validation as a procurement credential, role in Flex MOSAIC definition. This addresses Document A's strongest section without bloating Document B's length.\n\n---\n\n## 5. Head-to-Head Comparison\n\n| Dimension | Winner | Why |\n|---|---|---|\n| Better understands Rolls-Royce | **A** | A captures Rolls-Royce as a multi-division enterprise (Power Systems + SMR + EnergetIQ) and references real recent moves (Wylfa, CEZ, $24M plant, 45-second 20V4000). B scopes to RRPS only and treats SMR as a footnote. The SMR omission is decisive here. |\n| Better explains DCFlex | **B** | B presents the actual six-workstream architecture and Flex MOSAIC cleanly. A's \"two-workstream / scope expansion\" framing is muddled and arguably misrepresents DCFlex's structure. |\n| Better business case | **A** | A is explicit about validation, ecosystem visibility, and BYOF positioning, with five named engagement areas. B's \"shape the language\" thesis is excellent but stops short of \"here is what RRPS will gain.\" |\n| Stronger executive ask | **A** (decisively) | A: technical scoping session with named divisions, on a defined topic set, with pricing on the page. B: no ask, no contact, no price. This is the largest single gap between the two. |\n| More persuasive | **A**, narrowly | A has more activation energy (concrete asks, concrete near-term wins). B has the more sophisticated argument (\"shape the language\"). For an executive deciding to engage, A wins; for an executive already half-convinced, B is sufficient. |\n| More polished | **B** (decisively) | B's prose, structure, and restraint are clearly stronger. A is well-formatted but verbose and at points sales-flavored. |\n| More likely to result in a meeting | **A** | Because A makes saying yes easier — a defined next step, named topics, pricing visible. B will be admired and filed; A will be replied to. |\n\nNet: A wins the operational categories (understand, business case, ask, conversion), B wins the craft categories (clarity of DCFlex, polish). For a persuasion-to-action evaluation, the operational side is weighted more heavily — which is consistent with Document A's narrow overall lead.\n\n---\n\n## 6. Final Winner and Rationale\n\n**Winner: Document A.**\n\n- Document A: **76.95 / 100**\n- Document B: **72.80 / 100**\n- Margin: **4.15 points → narrow win** (per the user's interpretation framework: 2–4.5 points = narrow win)\n\n**Why A wins despite B's stronger writing.** Executive communication is judged at the point of decision, not at the point of admiration. Document A makes the decision easier in three ways B does not: it covers the whole of Rolls-Royce (including SMR), it spells out five concrete engagement areas with named EPRI mechanisms behind each, and it puts a specific ask, a price, and a payment structure on the page. Document B's writing is unambiguously better, but a Rolls-Royce executive can read Document B in full and not know what they are being asked to do — that is the deciding flaw.\n\n**Why the margin is narrow rather than decisive.** Document A has real, repairable credibility issues — the \"scope expansion\" framing, the unattributed $25M and ~75-member figures, and the technical density that crowds out the executive read. Document B has fewer such issues and is a more polished artifact. If Document A's \"scope expansion\" framing were called out by a Rolls-Royce reviewer, the gap could close further or invert. The win is real, but it is contingent on Document A's claims surviving scrutiny.\n\n---\n\n## 7. Recommended \"Best Combined Version\"\n\n**Take from Document B:**\n- The four-page length and the executive-note format.\n- The executive-summary paragraph in full — especially the \"non-binding language → tariffs and procurement inherit it\" reframe.\n- The four-row convergence table as the structural backbone.\n- The closing line: \"shape — rather than track — how credible, lower-carbon, grid-interactive data-centre power is defined.\"\n- The honest WS1–WS6 architecture and the demonstration roster.\n\n**Take from Document A:**\n- The whole-of-Rolls-Royce framing (Power Systems + SMR + EnergetIQ).\n- The five engagement areas (E1–E5), tightened to one paragraph each, with engineering depth pushed to a separate technical annex.\n- The membership pricing and payment options.\n- The proposed next step (scoping session with both divisions, on named topics).\n- The IP / EPRI-independence framing.\n- The three-level assessment framework, but as an appendix box rather than a main-body section.\n\n### Top 5 improvements that would make the winning package even stronger\n\n1. **Replace the \"scope expansion\" frame with the honest WS1–WS6 description.** Removes the single biggest credibility risk at zero cost to the value proposition.\n2. **Reconcile the membership numbers.** Use \"more than 65 organisations\" (or whatever EPRI's most recent public figure is) and either source the $25M cumulative figure or replace it with directly verifiable committed-funding language.\n3. **Compress E1–E5 by ~40% in the main document, push depth to an annex.** Keeps the executive read at ~5–6 pages while preserving the engagement specificity that makes A persuasive.\n4. **Name counterparts on both sides and a meeting window.** A scoping session \"with Power Systems and SMR leadership\" is good; \"with Power Systems and SMR leadership in [city] in the [month] window, hosted by [named EPRI program lead] and [named EPRI SMR lead]\" is meaningfully stronger.\n5. **Address the competitor presence directly.** Caterpillar, INNIO Jenbacher, and Schneider Electric are already inside DCFlex. One sentence that makes RRPS's absence visible — without becoming combative — converts urgency from implicit to explicit.\n\n---\n\n## 8. Confidence Level\n\n**Confidence: Medium–High.**\n\nThe directional judgment (Document A wins on persuasion-to-action grounds, narrowly, principally because of SMR coverage and a concrete ask) is robust. The numerical margin (≈4 points) is sensitive to a few category-level judgment calls — particularly around Category 3 (clarity of DCFlex) and Category 6 (credibility), where a stricter reading of Document A's \"scope expansion\" framing could shift another 1–2 points to Document B and put the result on the borderline of a tie. Conversely, a stricter reading of Document B's missing SMR thread could push another 1–2 points to Document A and move the margin into \"clear win\" territory.\n\n**What would change the assessment:**\n\n- **If the target executive is specifically inside Rolls-Royce Power Systems** (rather than corporate or group level), Document B's RRPS-only scope becomes appropriate rather than incomplete, and the SMR omission stops mattering. Document B then wins on craft, clarity, and credibility — likely by a moderate margin.\n- **If Document A's \"$25M / ~75 members / scope expansion\" framing turns out to be inaccurate when checked**, Document A's credibility score drops by 2–3 points, the margin closes to a tie or inverts, and Document B wins on credibility-adjusted total.\n- **If a one-page cover letter exists for either document** (not present in what was supplied), the package-completeness scoring shifts. Document B in particular would benefit substantially from a missing cover-note layer; Document A is more nearly self-contained.\n\nNet: Document A is the right pick on the materials supplied and the target-audience assumption stated in the brief, but the call is closer than the totals alone suggest, and the recommended best-combined version above is meaningfully stronger than either document standalone."}, "gemini": {"label": "Gemini 3 Deepthink", "short": "Gemini", "source": "RR-Gemini-Analysis-v2.md", "accent": "#7c5cff", "totalA": 92.4, "totalB": 80.4, "confidence": "High", "headline": "Document A is the superior executive-focused proposal.", "summary": "Gemini judged Document A decisively stronger because it combines technical depth, financial transparency, and specific product-level relevance for Rolls-Royce. It highlights direct links to SMR, Power Systems, the mtu Kinetic PowerPack, and a concrete ROI path with a specific proposed next step. Document B was praised for concision, operating-language framing, and strong market positioning, but it was marked down for a weaker ask and less personalization.", "bestA": ["Divisional breadth across Rolls-Royce Power Systems, SMR, and mtu EnergetIQ.", "A strong “double value” proposition that expands the Hardware Readiness Framework for the same spend.", "Technical specificity through five concrete engagement areas that make the proposal feel decision-ready."], "watchoutsA": ["Length: at 8+ pages it risks losing an executive who wants the 30-second version first.", "Very technical and internally focused; it could use more of Document B’s visionary tone."], "bestB": ["Excellent “operating language” concept that frames DCFlex as the place where future procurement language is set.", "Very concise and easy to scan, with clear tables and a strong logic chain.", "Strong market-positioning story around the shift from passive emergency backup to active grid-interactive flexibility."], "watchoutsB": ["Lack of a clear ask, price point, or immediate next-step path.", "Less personalization: SMR is treated as a longer-horizon footnote rather than a central strategic pillar."], "rows": [{"categoryId": 1, "aRaw": 9.5, "aWeighted": 11.4, "bRaw": 9.0, "bWeighted": 10.8, "winner": "A", "rationale": "A connects to RR’s SMR and Power Systems divisions simultaneously."}, {"categoryId": 2, "aRaw": 10.0, "aWeighted": 10.0, "bRaw": 7.5, "bWeighted": 7.5, "winner": "A", "rationale": "A references specific 2026 product launches and UK Wylfa contracts."}, {"categoryId": 3, "aRaw": 8.5, "aWeighted": 10.2, "bRaw": 9.5, "bWeighted": 11.4, "winner": "B", "rationale": "B’s \"shaping the language\" narrative is exceptionally clear and concise."}, {"categoryId": 4, "aRaw": 9.5, "aWeighted": 11.4, "bRaw": 8.0, "bWeighted": 9.6, "winner": "A", "rationale": "A quantifies the $25M research leverage for a $750k investment."}, {"categoryId": 5, "aRaw": 10.0, "aWeighted": 9.0, "bRaw": 4.0, "bWeighted": 3.6, "winner": "A", "rationale": "A provides a full pricing table and a specific \"Next Step\" meeting."}, {"categoryId": 6, "aRaw": 9.0, "aWeighted": 9.0, "bRaw": 8.5, "bWeighted": 8.5, "winner": "A", "rationale": "A’s \"Hardware Readiness Framework\" (Levels 1–3) provides a concrete process."}, {"categoryId": 7, "aRaw": 9.0, "aWeighted": 7.2, "bRaw": 7.5, "bWeighted": 6.0, "winner": "A", "rationale": "A creates urgency through the \"Hardware Readiness\" expansion window."}, {"categoryId": 8, "aRaw": 8.0, "aWeighted": 5.6, "bRaw": 9.0, "bWeighted": 6.3, "winner": "B", "rationale": "B is more concise and visionary, fitting a \"busy executive\" profile better."}, {"categoryId": 9, "aRaw": 8.5, "aWeighted": 5.95, "bRaw": 8.5, "bWeighted": 5.95, "winner": "Tie", "rationale": "Both use effective tables to break up dense technical information."}, {"categoryId": 10, "aRaw": 9.5, "aWeighted": 4.75, "bRaw": 6.5, "bWeighted": 3.25, "winner": "A", "rationale": "A includes pricing, divisional mapping, and a technical roadmap."}, {"categoryId": 11, "aRaw": 9.0, "aWeighted": 4.5, "bRaw": 9.0, "bWeighted": 4.5, "winner": "Tie", "rationale": "Both documents handle IP and EPRI’s independence professionally."}, {"categoryId": 12, "aRaw": 8.5, "aWeighted": 3.4, "bRaw": 7.5, "bWeighted": 3.0, "winner": "A", "rationale": "The specific mention of SMR as a \"baseload\" solution for AI is highly memorable."}], "fullText": "Based on a comprehensive review of both communication packages, **Document A** is the superior executive-focused proposal. While Document B serves as an excellent visionary summary, Document A provides the technical depth, financial transparency, and specific product-level validation that a Rolls-Royce (RR) executive needs to justify a capital expenditure and strategic partnership.\n\n### **Executive Summary**\n\n**The Winner: Document A**  \nDocument A is the stronger package because it moves beyond industry trends to offer a **direct ROI roadmap** for Rolls-Royce's specific product lines. It identifies high-value technical \"pain points\"—such as the mtu Kinetic PowerPack’s performance during voltage dips—and explains exactly how EPRI’s research infrastructure can solve them. Furthermore, Document A includes a clear financial breakdown and a concrete \"Proposed Next Step,\" making it a \"turnkey\" document for an executive decision-maker.\n\n### ---\n\n**Scorecard Table**\n\n| Category | Weight | Doc A (Raw) | Doc A (Weighted) | Doc B (Raw) | Doc B (Weighted) | Winner | Rationale |\n| :---- | :---- | :---- | :---- | :---- | :---- | :---- | :---- |\n| 1\\. Strategic Fit | 12 | 9.5 | 11.4 | 9.0 | 10.8 | **A** | A connects to RR’s SMR and Power Systems divisions simultaneously.  |\n| 2\\. RR Personalization | 10 | 10.0 | 10.0 | 7.5 | 7.5 | **A** | A references specific 2026 product launches and UK Wylfa contracts.  |\n| 3\\. DCFlex Clarity | 12 | 8.5 | 10.2 | 9.5 | 11.4 | **B** | B’s \"shaping the language\" narrative is exceptionally clear and concise.  |\n| 4\\. Business Case | 12 | 9.5 | 11.4 | 8.0 | 9.6 | **A** | A quantifies the $25M research leverage for a $750k investment.  |\n| 5\\. Specificity of Ask | 9 | 10.0 | 9.0 | 4.0 | 3.6 | **A** | A provides a full pricing table and a specific \"Next Step\" meeting.  |\n| 6\\. Credibility/Evidence | 10 | 9.0 | 9.0 | 8.5 | 8.5 | **A** | A’s \"Hardware Readiness Framework\" (Levels 1–3) provides a concrete process.  |\n| 7\\. Persuasiveness | 8 | 9.0 | 7.2 | 7.5 | 6.0 | **A** | A creates urgency through the \"Hardware Readiness\" expansion window.  |\n| 8\\. Executive Tone | 7 | 8.0 | 5.6 | 9.0 | 6.3 | **B** | B is more concise and visionary, fitting a \"busy executive\" profile better.  |\n| 9\\. Structure/Flow | 7 | 8.5 | 5.95 | 8.5 | 5.95 | **Tie** | Both use effective tables to break up dense technical information. |\n| 10\\. Completeness | 5 | 9.5 | 4.75 | 6.5 | 3.25 | **A** | A includes pricing, divisional mapping, and a technical roadmap. |\n| 11\\. Risk/Accuracy | 5 | 9.0 | 4.5 | 9.0 | 4.5 | **Tie** | Both documents handle IP and EPRI’s independence professionally.  |\n| 12\\. Memorability | 4 | 8.5 | 3.4 | 7.5 | 3.0 | **A** | The specific mention of SMR as a \"baseload\" solution for AI is highly memorable.  |\n| **TOTAL** | **100** |  | **92.4** |  | **80.4** | **Doc A** |  |\n\n### ---\n\n**Individual Analysis: Document A**\n\n* **Main Strengths:**  \n  * **Divisional Breadth:** It captures the full scope of Rolls-Royce, including the SMR division and the mtu EnergetIQ platform, rather than just the engines.\n\n  * **The \"Double Value\" Proposition:** Effectively sells the expansion of the \"Hardware Readiness Framework\" as an additive benefit for the same cost.\n\n  * **Technical Specificity:** The inclusion of \"E1\" through \"E5\" provides five distinct, high-value reasons for RR to join, ranging from voltage dip testing to SMR baseload case studies.\n\n* **Main Weaknesses:**  \n  * **Length:** At 8+ pages of dense content, it risks losing an executive who wants the \"30-second version\" first.  \n  * **Internal Focus:** It is very technical; it could benefit from a bit more of the \"industry visionary\" tone found in Document B.  \n* **Best Moment:** The \"Research Leverage\" section, which frames the membership fee not as a cost, but as access to a $25 million platform.\n\n* **Likely Executive Reaction:** \"This is expensive, but the independent validation of our Kinetic PowerPack and the SMR visibility makes this a strategic necessity.\"\n\n### **Individual Analysis: Document B**\n\n* **Main Strengths:**  \n  * **The \"Operating Language\" Concept:** It frames DCFlex not just as a test lab, but as the place where the \"language\" of future procurement is written.\n\n  * **Conciseness:** Very easy to scan. The tables are well-organized and focus on the \"Relevance\" and \"Implication\" for Rolls-Royce.\n\n  * **Market Positioning:** Excellent at explaining the shift from \"passive emergency backup to active, grid-interactive flexibility\".\n\n* **Main Weaknesses:**  \n  * **Lack of a Clear \"Ask\":** It makes a case for membership but fails to mention what it costs or what the first step of engagement looks like.  \n  * **Less Personalization:** While it mentions RRPS/mtu, it treats SMR as a \"Long-horizon\" footnote  rather than a core strategic pillar as in Document A.\n\n* **Best Moment:** The \"DCFlex Observation / Relevance / Implication\" table, which provides a brilliant 3-step logic for why RR belongs in the consortium.\n\n* **Likely Executive Reaction:** \"Interesting initiative. I'd like to know what it costs and exactly what my team would do on Tuesday morning if we joined.\"\n\n### ---\n\n**Head-to-Head Comparison**\n\n* **Which better understands Rolls-Royce?** **Document A.** It references the specific 45-second fast-start gas gensets launching in 2026 and the Wylfa SMR contract.\n\n* **Which better explains DCFlex?** **Document B.** Its focus on \"Flex MOSAIC\" and the six workstreams is more digestible for a newcomer.\n\n* **Which better makes the business case?** **Document A.** It explicitly links participation to \"independent validation\" that \"internal testing cannot produce with equivalent credibility\".\n\n* **Which has the stronger executive ask?** **Document A.** It includes a clear $750,000 price point and a \"Next Step\" technical scoping session.\n\n### ---\n\n**Final Winner and Rationale**\n\n**Winner: Document A**  \n**Final Score:** **92.4 / 100** (vs. 80.4)  \nThe **12-point margin** represents a **decisive win**. While Document B is a superior \"introductory brief,\" Document A is a superior \"decision document.\" Executives ultimately need to know the price, the specific product benefits, and the immediate next steps. Document A provides all three, whereas Document B leaves the executive with homework to find those details.\n\n### ---\n\n**Recommended “Best Combined Version”**\n\nTo create a \"Platinum Level\" package, take **Document A** as the base and apply these improvements:\n\n1. **Visionary Intro:** Use the \"Operating Language\" and \"Shift from Passive to Active\" framing from Document B  as the opening executive summary for Document A.\n\n2. **The \"Observation\" Table:** Incorporate Document B's \"Observation / Relevance / Implication\" table  into the strategic overview.\n\n3. **Visual Roadmap:** Add a graphic of the 3-level Hardware Readiness Framework described in Document A.\n\n4. **Division Highlight:** Keep the deep dive into RR SMR from Document A, as this is a major strategic interest for Rolls-Royce leadership.\n\n5. **Concise Executive Cover:** Add a one-page \"Cover Note\" that summarizes the $25M leverage and the \"Proposed Next Step\"  so the executive doesn't have to hunt for it.\n\n**Confidence Level: High.** The presence of specific pricing and divisional-level technical mapping in Document A makes it the clear choice for motivating actual executive engagement."}}, "aggregate": {"meanA": 83.3, "meanB": 76.27, "meanMargin": 7.03, "medianA": 80.55, "medianB": 75.6, "modelsForA": 3, "modelsTotal": 3, "rows": [{"categoryId": 1, "category": "Executive relevance and strategic fit", "short": "Strategic fit", "weight": 12, "aRawAvg": 9.17, "bRawAvg": 8.17, "aWeightedAvg": 11.0, "bWeightedAvg": 9.8, "weightedMargin": 1.2, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"ChatGPT": "A ties DCFlex to Rolls-Royce Power Systems, SMR, mtu products, validation, customers, and interconnection. B is highly relevant but narrower.", "Claude": "A covers all three relevant Rolls-Royce divisions including SMR; B scopes to RRPS only and ignores SMR.", "Gemini": "A connects to RR’s SMR and Power Systems divisions simultaneously."}}, {"categoryId": 2, "category": "Rolls-Royce-specific personalization and insight", "short": "Personalization", "weight": 10, "aRawAvg": 9.33, "bRawAvg": 7.33, "aWeightedAvg": 9.33, "bWeightedAvg": 7.33, "weightedMargin": 2.0, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"ChatGPT": "A is deeply customized around Rolls-Royce divisions, products, market status, and use cases. B is well tailored to RRPS but less granular.", "Claude": "A names recent contracts (Wylfa, CEZ, GBN), 50% segment growth, $24M US plant investment, 45-second 20V4000. B maps products generically.", "Gemini": "A references specific 2026 product launches and UK Wylfa contracts."}}, {"categoryId": 3, "category": "Clarity of the DCFlex value proposition", "short": "DCFlex value", "weight": 12, "aRawAvg": 7.67, "bRawAvg": 8.83, "aWeightedAvg": 9.2, "bWeightedAvg": 10.6, "weightedMargin": -1.4, "winner": "B", "modelWins": {"A": 0, "B": 3, "Tie": 0}, "rationales": {"ChatGPT": "B explains DCFlex more cleanly and quickly. A gives more detail but becomes complex and potentially confusing.", "Claude": "B explains all six workstreams and Flex MOSAIC cleanly. A's \"two-workstream / scope expansion\" framing is muddled and arguably inaccurate.", "Gemini": "B’s \"shaping the language\" narrative is exceptionally clear and concise."}}, {"categoryId": 4, "category": "Business case and value to Rolls-Royce", "short": "Business case", "weight": 12, "aRawAvg": 9.0, "bRawAvg": 7.33, "aWeightedAvg": 10.8, "bWeightedAvg": 8.8, "weightedMargin": 2.0, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"ChatGPT": "A explains independent validation, ecosystem visibility, product differentiation, interconnection value, and membership leverage. B’s business case is credible but less concrete.", "Claude": "A spells out validation, ecosystem visibility, BYOF positioning, $25M leverage. B argues \"shape rather than track\" but doesn't quantify gain.", "Gemini": "A quantifies the $25M research leverage for a $750k investment."}}, {"categoryId": 5, "category": "Specificity of the ask and next steps", "short": "Ask / next steps", "weight": 9, "aRawAvg": 9.0, "bRawAvg": 3.83, "aWeightedAvg": 8.1, "bWeightedAvg": 3.45, "weightedMargin": 4.65, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"ChatGPT": "A proposes a technical scoping session and names topics. B makes the case for membership but does not make an actionable ask.", "Claude": "A proposes a named scoping session and lists pricing options. B ends with sentiment, no ask, no contact path.", "Gemini": "A provides a full pricing table and a specific \"Next Step\" meeting."}}, {"categoryId": 6, "category": "Credibility, evidence, and substantiation", "short": "Credibility", "weight": 10, "aRawAvg": 7.67, "bRawAvg": 8.17, "aWeightedAvg": 7.67, "bWeightedAvg": 8.17, "weightedMargin": -0.5, "winner": "B", "modelWins": {"A": 1, "B": 2, "Tie": 0}, "rationales": {"ChatGPT": "B is more restrained. A has useful detail but contains several high-risk, hard factual claims that need verification.", "Claude": "B is carefully hedged (\"subject to programme fit\", \"informational and non-binding\"). A's \"$25M / ~75 members\" and \"scope expansion\" framing are sales-flavored and inconsistent with B's \"more than 65 organisations\".", "Gemini": "A’s \"Hardware Readiness Framework\" (Levels 1–3) provides a concrete process."}}, {"categoryId": 7, "category": "Persuasiveness, differentiation, and urgency", "short": "Urgency", "weight": 8, "aRawAvg": 8.33, "bRawAvg": 7.5, "aWeightedAvg": 6.67, "bWeightedAvg": 6.0, "weightedMargin": 0.67, "winner": "A", "modelWins": {"A": 2, "B": 0, "Tie": 1}, "rationales": {"ChatGPT": "A creates stronger urgency by linking DCFlex to validation, procurement visibility, competitors, and near-term research access. B is persuasive but softer.", "Claude": "Different mechanisms — A uses concrete near-term hooks; B uses the \"shape the language\" frame. Both effective.", "Gemini": "A creates urgency through the \"Hardware Readiness\" expansion window."}}, {"categoryId": 8, "category": "Executive tone and concision", "short": "Executive tone", "weight": 7, "aRawAvg": 6.33, "bRawAvg": 8.67, "aWeightedAvg": 4.43, "bWeightedAvg": 6.07, "weightedMargin": -1.63, "winner": "B", "modelWins": {"A": 0, "B": 3, "Tie": 0}, "rationales": {"ChatGPT": "B is concise and executive-friendly. A is dense, technical, and too long for many senior executives as a first-touch document.", "Claude": "B is taut and senior. A is dense and sometimes technically over-detailed (E1–E5 read like a scoping memo, not an invitation).", "Gemini": "B is more concise and visionary, fitting a \"busy executive\" profile better."}}, {"categoryId": 9, "category": "Structure, flow, and readability", "short": "Structure", "weight": 7, "aRawAvg": 7.33, "bRawAvg": 8.17, "aWeightedAvg": 5.13, "bWeightedAvg": 5.72, "weightedMargin": -0.58, "winner": "B", "modelWins": {"A": 0, "B": 2, "Tie": 1}, "rationales": {"ChatGPT": "B has a cleaner four-page executive-note structure. A is logically organized but crowded and more like a technical proposal.", "Claude": "B leads with executive summary, finishes with closing case; clean. A is well-organized but long with overlapping sections.", "Gemini": "Both use effective tables to break up dense technical information."}}, {"categoryId": 10, "category": "Package completeness and communication effectiveness", "short": "Completeness", "weight": 5, "aRawAvg": 8.83, "bRawAvg": 6.33, "aWeightedAvg": 4.42, "bWeightedAvg": 3.17, "weightedMargin": 1.25, "winner": "A", "modelWins": {"A": 3, "B": 0, "Tie": 0}, "rationales": {"ChatGPT": "A includes invitation framing, value case, engagement areas, pricing, and next step. B lacks outreach mechanics and conversion path.", "Claude": "A includes pricing, next steps, IP framing, assessment framework. B is a standalone note without these.", "Gemini": "A includes pricing, divisional mapping, and a technical roadmap."}}, {"categoryId": 11, "category": "Risk management, factual accuracy, and professionalism", "short": "Risk mgmt.", "weight": 5, "aRawAvg": 6.83, "bRawAvg": 8.33, "aWeightedAvg": 3.42, "bWeightedAvg": 4.17, "weightedMargin": -0.75, "winner": "B", "modelWins": {"A": 0, "B": 2, "Tie": 1}, "rationales": {"ChatGPT": "A’s overclaims, unverified program facts, “confidential” label, and endorsement-adjacent wording create risk. B is safer and more measured.", "Claude": "A's reframing of WS6 as a special \"expansion bonus\" is risky if a Rolls-Royce reader cross-checks. B's restraint reduces risk surface.", "Gemini": "Both documents handle IP and EPRI’s independence professionally."}}, {"categoryId": 12, "category": "Memorability and relationship-building potential", "short": "Memorability", "weight": 4, "aRawAvg": 7.83, "bRawAvg": 7.5, "aWeightedAvg": 3.13, "bWeightedAvg": 3.0, "weightedMargin": 0.13, "winner": "A", "modelWins": {"A": 2, "B": 1, "Tie": 0}, "rationales": {"ChatGPT": "A gives Rolls-Royce more to react to and discuss. B leaves a positive impression but may not prompt action.", "Claude": "B's \"language of flexibility\" is the more durable executive sticky-note. A is memorable through specifics.", "Gemini": "The specific mention of SMR as a \"baseload\" solution for AI is highly memorable."}}]}, "promptHtml": "", "promptRaw": "You are an impartial executive-communications evaluator. I am judging two competing communication packages intended to persuade an executive at Rolls Royce to join or engage with EPRI’s DCFlex initiative.\n\nI will provide two Word documents:\n- Document A\n- Document B\n\nYour job is to conduct an extensive, fair, evidence-based analysis of each document and determine which package is more likely to succeed with an Rolls Royce executive audience.\n\nImportant context:\n- Target audience: an executive at Rolls Royce.\n- Objective: persuade Rolls Royce to seriously consider joining, partnering with, or engaging in the EPRI DCFlex initiative.\n- Evaluation focus: not just writing quality, but likelihood of motivating executive action.\n- Judge the documents, not the authors.\n- If the documents contain names or identifying details, do not let those bias the evaluation.\n- If external research is available, use only current, credible sources to understand Rolls Royce’ likely executive priorities, market position, and strategic interests. Clearly distinguish document-based observations from externally researched context. If external research is not available, proceed using only the documents and general executive communication principles.\n\nPlease perform the following analysis.\n\nFirst, read both documents fully. Identify what each package appears to contain, such as email copy, cover letter, one-pager, proposal, talking points, briefing memo, slide content, or other materials. Briefly summarize the purpose and structure of each document.\n\nThen evaluate each document using the weighted rubric below. Use a 0–10 raw score for each category, allowing half-points. Convert each raw score into a weighted score using the category weight. Show the math clearly.\n\nScoring scale:\n- 9–10: Exceptional; highly likely to resonate with an executive audience.\n- 7–8.5: Strong; effective with some room for improvement.\n- 5–6.5: Adequate; usable but may not be compelling enough.\n- 3–4.5: Weak; significant concerns or missing elements.\n- 0–2.5: Very poor, absent, confusing, or counterproductive.\n\nRubric, total 100 points:\n\n1. Executive relevance and strategic fit — 12 points  \nAssess whether the package speaks to the priorities of an Rolls Royce executive. Does it connect DCFlex to strategic, commercial, technical, operational, sustainability, resilience, or market-positioning concerns that would matter to ADI leadership?\n\n2. Rolls Royce-specific personalization and insight — 10 points  \nAssess whether the communication feels tailored to Rolls Royce rather than generic. Does it reference ADI’s likely business interests, technologies, customer base, energy needs, semiconductor/manufacturing realities, electrification, grid-interactive opportunities, or partnership rationale in a credible way?\n\n3. Clarity of the DCFlex value proposition — 12 points  \nAssess how clearly the document explains what DCFlex is, why it matters, and what role ADI could play. Does the reader quickly understand the opportunity?\n\n4. Business case and value to Rolls Royce — 12 points  \nAssess whether the package explains what ADI gains. Consider financial value, strategic advantage, innovation benefits, customer relevance, operational flexibility, resilience, sustainability, regulatory alignment, thought leadership, and potential market differentiation.\n\n5. Specificity of the ask and next steps — 9 points  \nAssess whether the package makes it easy for an executive to say yes to a concrete next step. Is the ask specific, appropriately sized, and actionable? Does it propose a meeting, pilot, executive briefing, technical discussion, membership path, or other clear action?\n\n6. Credibility, evidence, and substantiation — 10 points  \nAssess whether claims are supported by evidence, logic, examples, data, references, EPRI credibility, industry trends, or plausible reasoning. Penalize vague claims, unsupported superlatives, or overpromising.\n\n7. Persuasiveness, differentiation, and urgency — 8 points  \nAssess whether the package creates a compelling reason to act now. Does it explain why this initiative is distinctive, timely, and worth executive attention compared with other competing priorities?\n\n8. Executive tone and concision — 7 points  \nAssess whether the writing is appropriate for a senior executive. Is it concise, confident, professional, respectful, and direct? Does it avoid unnecessary jargon, academic phrasing, sales hype, or excessive technical detail?\n\n9. Structure, flow, and readability — 7 points  \nAssess whether the document is easy to navigate. Does it lead with the strongest message? Are headings, sequencing, summaries, and transitions effective? Can a busy executive grasp the point quickly?\n\n10. Package completeness and communication effectiveness — 5 points  \nAssess whether the overall package feels complete and usable. Does it include the right materials for outreach? Are there gaps in audience framing, message hierarchy, supporting detail, or follow-up materials?\n\n11. Risk management, factual accuracy, and professionalism — 5 points  \nAssess whether the communication avoids reputational, factual, legal, confidentiality, or relationship risks. Penalize inaccurate assumptions, exaggerated claims, insensitive phrasing, poor formatting, typos, or anything that could reduce trust.\n\n12. Memorability and relationship-building potential — 4 points  \nAssess whether the package leaves a positive impression and opens the door to a relationship. Does it make EPRI and DCFlex feel credible, relevant, and worth continued discussion?\n\nAfter scoring, provide the following output:\n\n1. Executive summary  \nGive a concise overview of which document is stronger and why. State the winner clearly.\n\n2. Scorecard table  \nCreate a table showing:\n- Category\n- Weight\n- Document A raw score\n- Document A weighted score\n- Document B raw score\n- Document B weighted score\n- Winner by category\n- Brief rationale\n\n3. Individual analysis of Document A  \nProvide a thorough analysis of Document A, including:\n- Main strengths\n- Main weaknesses\n- Best moments or strongest passages\n- Missing or underdeveloped elements\n- Risks or concerns\n- Likely executive reaction\n- Specific recommendations to improve it\n\nUse brief excerpts or paraphrased examples from the document to support your points.\n\n4. Individual analysis of Document B  \nProvide the same level of analysis for Document B:\n- Main strengths\n- Main weaknesses\n- Best moments or strongest passages\n- Missing or underdeveloped elements\n- Risks or concerns\n- Likely executive reaction\n- Specific recommendations to improve it\n\nUse brief excerpts or paraphrased examples from the document to support your points.\n\n5. Head-to-head comparison  \nCompare the two documents directly across the most important dimensions:\n- Which better understands Rolls Royce?\n- Which better explains DCFlex?\n- Which better makes the business case?\n- Which has the stronger executive ask?\n- Which is more persuasive?\n- Which is more polished?\n- Which is more likely to result in a meeting or engagement?\n\n6. Final winner and rationale  \nName the winner. Provide the final total score for each document out of 100. Explain whether the margin is decisive, moderate, or narrow.\n\nUse this interpretation:\n- 10+ point difference: decisive win\n- 5–9.5 point difference: clear but not overwhelming win\n- 2–4.5 point difference: narrow win\n- Less than 2 points: essentially a tie, but still identify which document has the slight edge\n\n7. Recommended “best combined version”  \nBriefly explain what should be taken from each document to create the strongest possible final package. Identify the top 5 improvements that would make the winning package even stronger.\n\n8. Confidence level  \nState your confidence in the judgment: High, Medium, or Low. Explain what, if anything, would change your assessment.\n\nBe candid and rigorous. Do not default to politeness. The goal is to determine which package is most likely to persuade an Rolls Royce executive to engage with EPRI’s DCFlex initiative.", "sourceFiles": ["RR-analysis-prompt.md", "RR-Chatgpt-Analysis.md", "RR-Claude-Analysis.md", "RR-Gemini-Analysis-v2.md"], "headline": "Document A wins the Rolls-Royce competition across all three frontier-model analyses.", "summary": "All three models chose Document A by Arshad over Document B by Tony. The consensus pattern is clear: A is more actionable, more tailored to Rolls-Royce’s Power Systems / SMR / mtu opportunity set, and better at translating DCFlex into a decision-ready engagement path. B is consistently praised for being cleaner, more concise, and more executive-readable. Averaging the three models yields 83.32 for A versus 76.27 for B, a 7.05-point advantage — a clear but not overwhelming win for Document A.", "bestCombined": ["Use Document A as the base package, but open with Document B’s tighter executive framing and “operating language” thesis.", "Create a two-page executive brief plus a technical annex so the yes/no decision case is clear before the engineering depth.", "Put the ask on page one: a focused executive briefing followed by a technical scoping session on two or three priority Rolls-Royce use cases.", "Verify and tighten all hard claims around member count, research-platform value, pricing, and scope so the package keeps its credibility advantage.", "Keep the strong Rolls-Royce-specific hooks around SMR, Power Systems, mtu Kinetic PowerPack, gas gensets, and EnergetIQ, but compress the five engagement areas for faster scanning.", "Add one visual roadmap or simple framework graphic so the executive can absorb the offer structure in seconds."], "bestTakeA": ["Whole-of-Rolls-Royce positioning: Power Systems, SMR, mtu Kinetic PowerPacks, gas gensets, and EnergetIQ.", "Five concrete engagement areas that map DCFlex research to actual Rolls-Royce products and market opportunities.", "A specific technical scoping-session ask that creates a low-friction path to action.", "Membership mechanics, IP / independence framing, and research-leverage logic."], "bestTakeB": ["Sharper executive thesis: data-center power is moving from passive backup to active grid-interactive flexibility.", "Cleaner executive-note structure and better senior-reader tone.", "“Shape rather than track” / “operating language” framing for procurement, tariffs, and interconnection rules.", "More restrained risk posture and clearer WS1–WS6 / Flex MOSAIC architecture."], "transparencyNote": "Rolls-Royce section now uses the uploaded RR prompt plus all three RR model analyses: ChatGPT, Claude, and Gemini. Scores are derived only from those uploaded analyses."}}, "defaultCompetition": "rr"}</script>
-<script id="imported-data" type="application/json">{}</script>
-<script>
-const RAW = JSON.parse(document.getElementById('dashboard-data').textContent);
-const EMBEDDED_IMPORTS = (() => { try { return JSON.parse(document.getElementById('imported-data').textContent||'{}'); } catch(e) { return {}; } })();
-const fmt=(n,d=1)=>Number(n||0).toFixed(d).replace(/\.0$/,'');
-const $=(sel,root=document)=>root.querySelector(sel);
-const $$=(sel,root=document)=>Array.from(root.querySelectorAll(sel));
-const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-let DATA = (typeof structuredClone === 'function') ? structuredClone(RAW) : JSON.parse(JSON.stringify(RAW));
-let state = { competition: DATA.defaultCompetition || 'adi', tab:'overview', scoreMode:'aggregate', sortMode:'category', modelKey:null };
-try {
-  const injected = EMBEDDED_IMPORTS && EMBEDDED_IMPORTS.rr;
-  if(injected && injected.models && Object.keys(injected.models).length) { DATA.competitions.rr = injected; }
-} catch(e) {}
-function toast(msg){const t=$('#toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200)}
-function comp(){return DATA.competitions[state.competition]}
-function hasScores(c=comp()){return c && c.aggregate && c.models && Object.keys(c.models).length}
-function dataStatus(c=comp()){if(!hasScores(c))return 'pending'; if(c.status==='partial')return 'partial'; return 'complete'}
-function winnerLabel(c=comp()){
-  if(!hasScores(c)) return 'Pending';
-  const a=c.aggregate.meanA, b=c.aggregate.meanB;
-  if(Math.abs(a-b)<.01) return 'Tie';
-  return a>b?'Document A':'Document B';
-}
-function docOwnerForWinner(c=comp()){const w=winnerLabel(c); if(w==='Document A')return c.docA.owner; if(w==='Document B')return c.docB.owner; return '—'}
-function modelArray(c=comp()){return Object.entries(c.models||{}).map(([key,val])=>({key,...val}));}
-function navItems(){return [
-  ['overview','Overview'],['scores','Scores'],['models','Model tabs'],['combined','Best combo'],['prompt','Prompt'],['sources','Sources']
-];}
-function escapeHtml(s=''){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
-function stripMd(s=''){return s.replace(/\[(.*?)\]\((.*?)\)/g,'$1').replace(/[*_`#>|]/g,'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim();}
-function tinyMd(md=''){
-  md = String(md||'');
-  const lines = md.split(/\r?\n/); let out='', inUl=false, inTable=false;
-  function close(){ if(inUl){out+='</ul>'; inUl=false} if(inTable){out+='</tbody></table></div>'; inTable=false} }
-  for(let i=0;i<lines.length;i++){
-    let line=lines[i]; const t=line.trim();
-    if(!t){close(); continue;}
-    if(/^\|/.test(t) && t.split('|').length>3){
-      if(i+1<lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i+1])){
-        close(); inTable=true; out+='<div class="table-scroll"><table class="md-table"><thead><tr>';
-        const cells=t.split('|').slice(1,-1); cells.forEach(c=>out+='<th>'+inlineMd(c)+'</th>'); out+='</tr></thead><tbody>'; i++; continue;
-      } else if(inTable){
-        const cells=t.split('|').slice(1,-1); out+='<tr>'; cells.forEach(c=>out+='<td>'+inlineMd(c)+'</td>'); out+='</tr>'; continue;
-      }
+
+  <header class="site-header">
+    <div class="wrap nav-row">
+      <a class="brand" href="#top" aria-label="SAFERai.Power home">
+        <div class="brand-mark">S</div>
+        <div>
+          <div class="brand-name">SAFERai.Power</div>
+          <div class="brand-sub">Electric Power Research Institute</div>
+        </div>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav id="site-nav" class="nav-links" aria-label="Primary navigation">
+        <a href="#scope">Scope</a>
+        <a href="#framework">Framework</a>
+        <a href="#participate">Participate</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#faq">FAQ</a>
+        <a class="cta-small" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Founding%20Member%20Interest&body=Hello%2C%0A%0AI%27d%20like%20to%20schedule%20an%20initial%20briefing%20about%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0AQuestions%3A%0A">Contact Us</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero" aria-label="SAFERai.Power hero">
+      <div class="wrap">
+        <div>
+          <div class="eyebrow"><span class="pulse"></span> Risk assessment & evidence tools for trusted utility AI</div>
+          <h1>Practical tools for assessing AI risk in utility operations.</h1>
+          <p class="hero-lede">SAFERai.Power is an EPRI-led nonprofit initiative to co-develop a harmonized power-sector AI risk assessment framework, evidence-package templates, and practical tooling for AI solutions deployed across utility operations. It is not a general AI governance model; it provides the operational risk assessment foundation that governance programs need.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Founding%20Member%20Interest&body=Hello%2C%0A%0AI%27d%20like%20to%20schedule%20an%20initial%20briefing%20about%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0AQuestions%3A%0A">Contact Us to Join →</a>
+            <a class="btn btn-secondary" href="#participate">View participation tiers</a>
+          </div>
+          <div class="microcopy">Founding member inquiries: <a href="mailto:bsooter@epri.com">bsooter@epri.com</a></div>
+        </div>
+
+        <aside class="hero-card" aria-label="SAFERai.Power summary">
+          <div class="hero-card-top">
+            <h2>Built to help AI move faster where risk is low — and more carefully where consequence is real.</h2>
+            <p>Built to standardize the operational evidence that utilities, solution providers, and reviewers need without duplicating broad NIST, ISO/IEC, or internal governance programs.</p>
+            <div class="proof-grid" aria-label="Core deliverables snapshot">
+              <div class="proof-tile"><strong>Risk</strong><span>tiering & autonomy levels</span></div>
+              <div class="proof-tile"><strong>Files</strong><span>evidence package templates</span></div>
+              <div class="proof-tile"><strong>Tools</strong><span>registry & assessment workflow</span></div>
+            </div>
+          </div>
+          <div class="hero-card-body">
+            <ul class="check-list">
+              <li>Harmonized assessment logic for asset management, grid operations, planning, restoration, vegetation, customer/DER, and OT-adjacent workflows.</li>
+              <li>Minimum common AI System File and evidence templates for material utility AI use cases.</li>
+              <li>Clear distinction between provider product evidence and local deployment evidence.</li>
+              <li>Reference registry, assessment workflow, and open-source toolkit components.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="scope" style="background: #fff;">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Clarifying the scope</div>
+          <h2>Not another general AI governance model. A power-sector risk framework and toolset.</h2>
+          <p class="section-lede">SAFERai.Power is focused on the operational evidence utilities need for AI solutions in asset management, grid operations, system planning, restoration, vegetation management, customer and DER integration, and OT-adjacent environments. The goal is to support existing governance programs with practical risk assessment methods, evidence packages, and tools.</p>
+        </div>
+        <div class="grid-2">
+          <div class="card card-pad">
+            <h3 style="font-size: 28px; color: var(--navy); margin-bottom: 16px;">What SAFERai.Power is</h3>
+            <ul class="check-list">
+              <li>A harmonized AI risk assessment framework for electric-sector operating contexts.</li>
+              <li>A set of reusable evidence-package templates that utilities and technology partners can use consistently.</li>
+              <li>A practical tool-building effort: registry model, assessment workflow, evidence generator, playbooks, and pilot-tested artifacts.</li>
+              <li>A way to create common expectations for product evidence and local deployment evidence before the market fragments.</li>
+            </ul>
+          </div>
+          <div class="card card-pad">
+            <h3 style="font-size: 28px; color: var(--navy); margin-bottom: 16px;">What SAFERai.Power is not</h3>
+            <ul class="check-list">
+              <li>Not a general AI governance model competing with NIST, ISO/IEC, or utility-specific governance programs.</li>
+              <li>Not a new law, regulatory regime, or one-size-fits-all compliance checklist.</li>
+              <li>Not a vendor selection program or blanket approval of any product, platform, or company.</li>
+              <li>Not a paper-only document. The end state is a usable framework, templates, pilots, and open-source tool components.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Why now</div>
+          <h2>AI adoption is moving from pilots to operations. Evidence discipline has to catch up before trust breaks.</h2>
+          <p class="section-lede">Electric-sector AI is not an ordinary enterprise IT problem. Failures can affect safety, asset integrity, customer outcomes, cybersecurity posture, regulatory exposure, and grid reliability.</p>
+        </div>
+        <div class="split">
+          <div class="card card-pad">
+            <h3 style="font-size: 30px; color: var(--navy); margin-bottom: 14px;">The gap is not enthusiasm. The gap is evidence.</h3>
+            <p style="color: var(--muted); margin-top: 0;">Without a shared assessment framework and reusable evidence templates, every utility, solution provider, regulator, and auditor invents a different way to classify AI risk, request evidence, monitor drift, bound autonomy, and prove that deployment decisions are defensible.</p>
+            <div class="failure-list" aria-label="Recurring AI failure patterns">
+              <div class="failure-pill"><span>01</span> Proxy failure</div>
+              <div class="failure-pill"><span>02</span> Historical bias</div>
+              <div class="failure-pill"><span>03</span> Automation bias</div>
+              <div class="failure-pill"><span>04</span> Stale data and context blindness</div>
+              <div class="failure-pill"><span>05</span> Misaligned optimization</div>
+              <div class="failure-pill"><span>06</span> Accountability gaps</div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card problem-card">
+              <h3>Physical consequence</h3>
+              <p>AI can influence safety, equipment integrity, operational margins, restoration priorities, and field activity.</p>
+            </div>
+            <div class="card problem-card">
+              <h3>Interconnected systems</h3>
+              <p>Actions in one control area can propagate across connected systems, markets, and operating responsibilities.</p>
+            </div>
+            <div class="card problem-card">
+              <h3>Data constraints</h3>
+              <p>Customer, operational, cyber-sensitive, nuclear, export-controlled, and BES-sensitive data require careful handling.</p>
+            </div>
+            <div class="card problem-card">
+              <h3>Lifecycle volatility</h3>
+              <p>Models can drift as weather, DER behavior, load shapes, field reality, asset condition, and topology change.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="background: #fff;" id="framework">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">The SAFERai.Power approach</div>
+          <h2>A utility-specific risk framework that turns broad principles into evidence, tests, and tools.</h2>
+          <p class="section-lede">SAFERai.Power complements existing reliability, cybersecurity, risk, and management-system frameworks. It does not replace NIST AI RMF, ISO/IEC 42001, IEC 62443, NERC CIP, the EU AI Act, or internal utility AI governance programs. It supplies the power-sector operational risk assessment layer those programs can use.</p>
+        </div>
+
+        <div class="grid-3" aria-label="SAFER principles">
+          <div class="card principle"><div class="icon">🛡️</div><h3>Safety</h3><p>Protect public and worker safety, asset integrity, operating margins, and fail-safe behavior.</p></div>
+          <div class="card principle"><div class="icon">⚖️</div><h3>Accountability</h3><p>Name owners, decision rights, approvals, change controls, logs, and incident responsibilities.</p></div>
+          <div class="card principle"><div class="icon">🤝</div><h3>Fairness</h3><p>Manage unjustified disadvantage for customers, workers, communities, and resource prioritization.</p></div>
+          <div class="card principle"><div class="icon">🔎</div><h3>Explainability</h3><p>Make sources, limits, confidence, rationale, provenance, and operating boundaries inspectable.</p></div>
+          <div class="card principle"><div class="icon">⚡</div><h3>Reliability</h3><p>Validate AI under representative, stressed, degraded, and changing power-system conditions.</p></div>
+          <div class="card principle"><div class="icon">🔐</div><h3>Enabling disciplines</h3><p>Security, privacy, confidentiality, human oversight, and operational resilience run across every layer.</p></div>
+        </div>
+
+        <div style="height: 30px;"></div>
+
+        <div class="section-head" style="margin-bottom: 22px;">
+          <div class="kicker">Four-layer architecture</div>
+          <h2 style="font-size: clamp(30px, 3.6vw, 46px);">Evidence artifacts and assessment tools that scale by use-case risk.</h2>
+        </div>
+        <div class="grid-4" aria-label="Four framework layers">
+          <div class="card layer-card"><div class="layer-num">1</div><h3>Data & system context</h3><p>Data classification, provenance, rights, restrictions, quality, intended purpose, and stakeholder context.</p></div>
+          <div class="card layer-card"><div class="layer-num">2</div><h3>AI system registry</h3><p>A practical system of record for identity, ownership, versioning, dependencies, lineage, risk tier, autonomy level, and change triggers.</p></div>
+          <div class="card layer-card"><div class="layer-num">3</div><h3>TEVV & monitoring</h3><p>Testing, evaluation, verification, validation, benchmarking, drift monitoring, incident triggers, and revalidation.</p></div>
+          <div class="card layer-card"><div class="layer-num">4</div><h3>Evidence review & assurance</h3><p>Tiered evidence review from internal attestation to stronger independent review for high-consequence applications.</p></div>
+        </div>
+
+        <div class="system-file" id="system-file">
+          <div class="intro">
+            <h3>The AI System File</h3>
+            <p>The core deliverable: a minimum common evidence package that helps utilities, ISOs/RTOs, technology partners, auditors, and regulators understand what an AI system is for, how it was validated, who owns it, what operating boundaries apply, when it must be reassessed, and how it is monitored after deployment.</p>
+          </div>
+          <div class="artifact-grid" aria-label="AI System File artifacts">
+            <div class="artifact">Impact assessment / intended-use review</div>
+            <div class="artifact">AI Use-Case Dossier</div>
+            <div class="artifact">Data Sheet & Provenance Record</div>
+            <div class="artifact">AI System Card</div>
+            <div class="artifact">Autonomy & Human Oversight Plan</div>
+            <div class="artifact">TEVV Report</div>
+            <div class="artifact">Cyber / OT Integration Assessment</div>
+            <div class="artifact">Deployment Profile</div>
+            <div class="artifact">Monitoring & Incident Plan</div>
+            <div class="artifact">Change & Reassessment Record</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="assurance">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Assessment where it matters</div>
+          <h2>SAFERai.Power separates product evidence from deployment reality.</h2>
+          <p class="section-lede">A technology partner product can have strong product evidence and still be deployed unsafely in a particular utility environment. SAFERai.Power addresses both sides of the value chain with practical, scope-bound evidence expectations.</p>
+        </div>
+        <div class="assurance-table" role="table" aria-label="Product assurance and deployment assurance comparison">
+          <div class="assurance-row header" role="row">
+            <div role="columnheader">Dimension</div>
+            <div role="columnheader">Provider product assurance</div>
+            <div role="columnheader">Utility deployment assurance</div>
+          </div>
+          <div class="assurance-row" role="row">
+            <div role="cell">Primary question</div>
+            <div role="cell">Is the product, version, and intended use case appropriate for electric-sector deployment?</div>
+            <div role="cell">Is the local implementation, permission model, oversight, training, and integration safe in practice?</div>
+          </div>
+          <div class="assurance-row" role="row">
+            <div role="cell">Evidence</div>
+            <div role="cell">System card, intended use, dependencies, validation evidence, known limits, security and update discipline.</div>
+            <div role="cell">Deployment architecture, integrations, permissions, operator roles, monitoring configuration, procedures, and incident readiness.</div>
+          </div>
+          <div class="assurance-row" role="row">
+            <div role="cell">Change triggers</div>
+            <div role="cell">Version changes, new dependencies, expanded intended use, or supplier foundation-model changes.</div>
+            <div role="cell">Permission changes, new integrations, increased autonomy, OT boundary changes, or local incidents.</div>
+          </div>
+        </div>
+
+        <div style="height: 26px;"></div>
+        <div class="grid-4" aria-label="Autonomy levels">
+          <div class="card receive-card"><h3>Advisory</h3><p>Recommends or drafts; no direct execution. Human decision required.</p></div>
+          <div class="card receive-card"><h3>Supervised action</h3><p>Can take limited actions only after explicit approval, with least privilege and rollback.</p></div>
+          <div class="card receive-card"><h3>Guarded autonomy</h3><p>Can act within deterministic constraints, escalation logic, and validated boundaries.</p></div>
+          <div class="card receive-card"><h3>Autonomous</h3><p>Exceptional for critical workflows; requires enhanced evidence, fail-safe fallback, and executive approval.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="background: #fff;" id="participate">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Participation</div>
+          <h2>Founding members help build the risk framework and tools before expectations harden without them.</h2>
+          <p class="section-lede">Participation is not a license fee. It is a two-year commitment to co-develop the open-source risk assessment framework, evidence-package templates, pilot playbooks, registry model, and practical assessment tools the sector needs, alongside EPRI and fellow founding members.</p>
+        </div>
+        <div class="grid-3" aria-label="Participation tiers">
+          <article class="card tier-card">
+            <div class="tier-head"><h3>Lead Partner</h3><p>Sector-shaping participation</p></div>
+            <div class="tier-price"><strong>$40,000</strong><span>per year</span><em>$80,000 over two years</em></div>
+            <div class="tier-body"><div><div class="who">Who it’s for</div><p>Large utilities, major IPPs, ISOs/RTOs, hyperscalers, AI platform providers, and infrastructure companies.</p></div><a class="btn btn-outline" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Lead%20Partner%20Interest&body=Hello%2C%0A%0AI%27d%20like%20to%20discuss%20Lead%20Partner%20participation%20in%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0A">Discuss Lead Partner</a></div>
+          </article>
+          <article class="card tier-card">
+            <div class="tier-head standard"><h3>Standard Partner</h3><p>Core sector participation</p></div>
+            <div class="tier-price"><strong>$25,000</strong><span>per year</span><em>$50,000 over two years</em></div>
+            <div class="tier-body"><div><div class="who">Who it’s for</div><p>Mid-size utilities, regional operators, established AI vendors, and implementation or advisory partners.</p></div><a class="btn btn-outline" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Standard%20Partner%20Interest&body=Hello%2C%0A%0AI%27d%20like%20to%20discuss%20Standard%20Partner%20participation%20in%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0A">Discuss Standard Partner</a></div>
+          </article>
+          <article class="card tier-card">
+            <div class="tier-head emerging"><h3>Emerging Partner</h3><p>Broad sector inclusion</p></div>
+            <div class="tier-price"><strong>$15,000</strong><span>per year</span><em>$30,000 over two years</em></div>
+            <div class="tier-body"><div><div class="who">Who it’s for</div><p>Smaller utilities, electric cooperatives, public power districts, municipal utilities, and early-stage technology companies.</p></div><a class="btn btn-outline" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Emerging%20Partner%20Interest&body=Hello%2C%0A%0AI%27d%20like%20to%20discuss%20Emerging%20Partner%20participation%20in%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0A">Discuss Emerging Partner</a></div>
+          </article>
+        </div>
+
+        <div class="access-note">
+          <div><strong>All tiers receive equivalent substantive access.</strong><br />Tier differentiation reflects organizational scale and capacity to contribute, not depth of engagement or control over the framework.</div>
+          <div>No qualified utility, cooperative, or innovator should be excluded because of fee structure alone. Organizations for whom the Emerging Partner tier remains a barrier are encouraged to contact EPRI to discuss participation pathways, including fee adjustments supported by philanthropic or government grant funding.</div>
+        </div>
+
+        <div style="height: 32px;"></div>
+        <div class="section-head" style="margin-bottom: 20px;">
+          <div class="kicker">What participants receive</div>
+          <h2 style="font-size: clamp(30px, 3.5vw, 46px);">The value starts before the final toolkit release.</h2>
+        </div>
+        <div class="grid-3">
+          <div class="card receive-card"><h3>Working group seats</h3><p>Input on risk tiers, evidence templates, use-case playbooks, registry fields, tool workflows, and assessment methods, with all tiers participating as equals.</p></div>
+          <div class="card receive-card"><h3>Early artifacts</h3><p>AI System File templates, registry schema, U-SAFER assessment protocols, autonomy guidance, provider evidence requests, and deployment evidence packages as they are developed.</p></div>
+          <div class="card receive-card"><h3>Pilot participation</h3><p>Opportunities to shape and evaluate representative Tier B and Tier C use cases during the Build and Pilot phase.</p></div>
+          <div class="card receive-card"><h3>Convenings</h3><p>Dedicated founding-member working sessions, roadmap reviews, pilot reviews, and cross-sector briefings with EPRI and other participants.</p></div>
+          <div class="card receive-card"><h3>Cross-sector engagement</h3><p>Structured engagement with technology providers, regulators, reliability organizations, and policy bodies through APEX.</p></div>
+          <div class="card receive-card"><h3>Founding recognition</h3><p>Recognition as a founding member upon v1.0 publication and at major framework milestones.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Development roadmap</div>
+          <h2>Two years to move from founding-member buildout to a full open-source toolkit release.</h2>
+          <p class="section-lede">Founding members do not wait two years for value. The initiative is structured as a learn-and-do cycle: artifacts are shaped, tested, applied, and improved as they emerge.</p>
+        </div>
+        <div class="roadmap" aria-label="SAFERai.Power roadmap">
+          <div class="road-item"><div class="road-dot">0</div><div class="road-content"><div class="road-meta">Founding member mobilization</div><h3>Onboard the founding cohort</h3><p>Confirm participating organizations, align on scope, identify priority use cases, and organize domain and technology working groups.</p></div></div>
+          <div class="road-item"><div class="road-dot">1</div><div class="road-content"><div class="road-meta">Months 1–6</div><h3>Foundation</h3><p>Working group charter, common glossary and data classes, draft AI System File schema, initial risk classification, autonomy guidance, founding member onboarding, APEX listening sessions, and technology-provider working group launch.</p></div></div>
+          <div class="road-item"><div class="road-dot">2</div><div class="road-content"><div class="road-meta">Months 7–12</div><h3>Build and Pilot</h3><p>Tiered test protocols, AI System Registry prototype, monitoring and incident runbooks, pilot evaluations on representative use cases, and artifact review cycles.</p></div></div>
+          <div class="road-item"><div class="road-dot">3</div><div class="road-content"><div class="road-meta">Months 13–18</div><h3>Scale and Assure</h3><p>SAFERai.Power v1.0 publication, Tier A safety case template, assurance and attestation guidance, onboarding kits, training, and broader sector adoption.</p></div></div>
+          <div class="road-item"><div class="road-dot">4</div><div class="road-content"><div class="road-meta">Target: 2028</div><h3>Full open-source toolkit release</h3><p>Release of the full SAFERai.Power toolkit and transition to an enduring stewardship model for the assessment framework and tools.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="background: #fff;" id="join-path">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Next steps</div>
+          <h2>Joining starts with a focused briefing.</h2>
+          <p class="section-lede">The decision path is intentionally simple: confirm fit, select participation tier, define the organization’s contribution profile, and onboard into the working groups.</p>
+        </div>
+        <div class="grid-3">
+          <div class="card receive-card"><h3>1. Initial briefing</h3><p>Discuss the risk framework, evidence-package templates, tool roadmap, participation track, expected contribution profile, and questions from your leadership, legal, cyber, operations, or AI teams.</p></div>
+          <div class="card receive-card"><h3>2. Participation commitment</h3><p>Confirm tier, annual or two-year upfront fee structure, priority use cases, and SME contribution scope for the working groups.</p></div>
+          <div class="card receive-card"><h3>3. Working group onboarding</h3><p>Join SAFERai.Power working groups and begin shaping artifacts, pilots, and assurance expectations.</p></div>
+        </div>
+        <div class="section-actions" style="margin-top: 26px;">
+          <a class="btn btn-primary" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Initial%20Briefing%20Request&body=Hello%2C%0A%0AI%27d%20like%20to%20schedule%20an%20initial%20briefing%20about%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0APotential%20participation%20tier%3A%0AQuestions%3A%0A">Schedule the initial briefing →</a>
+          <a class="btn btn-outline" href="#faq">Read the FAQ first</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">FAQ</div>
+          <h2>Questions potential participants usually ask before joining.</h2>
+          <p class="section-lede">Use the search box or category filters to find the questions most relevant to your organization.</p>
+        </div>
+
+        <div class="faq-tools" aria-label="FAQ search and filters">
+          <input class="faq-search" id="faqSearch" type="search" placeholder="Search FAQ, e.g., pricing, data sharing, APEX, pilots, open source…" />
+          <div class="faq-count" id="faqCount">Showing all FAQs</div>
+        </div>
+        <div class="faq-filters" role="toolbar" aria-label="FAQ categories">
+          <button class="filter-btn active" type="button" data-filter="all">All</button>
+          <button class="filter-btn" type="button" data-filter="membership">Membership</button>
+          <button class="filter-btn" type="button" data-filter="framework">Framework</button>
+          <button class="filter-btn" type="button" data-filter="assurance">Assurance</button>
+          <button class="filter-btn" type="button" data-filter="data">Data & security</button>
+          <button class="filter-btn" type="button" data-filter="technology">Technology partners</button>
+          <button class="filter-btn" type="button" data-filter="regulatory">Regulatory/APEX</button>
+          <button class="filter-btn" type="button" data-filter="roadmap">Roadmap</button>
+        </div>
+
+        <div class="faq-list" id="faqList">
+          <details class="faq-item" data-category="framework" open>
+            <summary>What is SAFERai.Power?</summary>
+            <div class="faq-answer"><p>SAFERai.Power is an EPRI-led, nonprofit initiative to develop a harmonized AI risk assessment framework, evidence-package templates, and practical tools for AI systems deployed across electric utility operations. It gives utilities, ISOs/RTOs, technology partners, and other stakeholders a common way to classify AI risk, define evidence expectations, bound autonomy, and monitor systems after deployment.</p></div>
+          </details>
+
+          <details class="faq-item" data-category="framework">
+            <summary>Is SAFERai.Power another AI governance framework?</summary>
+            <div class="faq-answer"><p>No. The initiative is being reframed deliberately: SAFERai.Power is a sector-specific AI risk assessment framework, evidence-package model, and tool-building effort. It helps governance by supplying operational risk assessment rigor, but it is not trying to replace broad AI governance frameworks or internal utility programs.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>Are you duplicating NIST, ISO/IEC, or existing utility AI programs?</summary>
+            <div class="faq-answer"><p>No. NIST, ISO/IEC, regulators, and individual utilities are addressing broad AI governance and management-system needs. SAFERai.Power is narrower: it translates those high-level structures into power-sector risk classifications, evidence templates, test expectations, operating-boundary guidance, and tools for utility use cases.</p></div>
+          </details>
+          <details class="faq-item" data-category="technology">
+            <summary>What tools are you actually trying to build?</summary>
+            <div class="faq-answer"><p>The target toolkit includes an AI System Registry reference model, a U-SAFER assessment workflow, evidence-package generators, use-case playbooks, provider evidence request templates, deployment assurance templates, monitoring and reassessment triggers, and human review workflows that remain auditable and registry-backed.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>What problem does it solve?</summary>
+            <div class="faq-answer"><p>AI adoption is outpacing shared risk assessment and evidence discipline. Without common templates and decision logic, every organization creates its own approach to AI system documentation, validation, autonomy boundaries, supplier diligence, and regulatory defensibility. SAFERai.Power standardizes the evidence and assessment logic so the sector can adopt AI more confidently and consistently.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>Why does the electric sector need its own framework?</summary>
+            <div class="faq-answer"><p>General-purpose AI governance does not cleanly define the operational evidence needed for utility-specific concerns such as OT boundaries, grid reliability, public and worker safety, asset integrity, customer fairness, system planning assumptions, DER behavior, storm conditions, and regulated operational data. SAFERai.Power translates broad principles into electric-sector risk assessment methods, evidence packages, and tools.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>Is SAFERai.Power a compliance checklist?</summary>
+            <div class="faq-answer"><p>No. It is a practical assessment framework and tool-building initiative for safe AI scale. It should help teams move faster where risk is low and apply deeper evidence, testing, and review where consequence is high. It is designed to enable adoption, not create a gatekeeping process that blocks useful low-risk AI.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>What does SAFER stand for?</summary>
+            <div class="faq-answer"><p>SAFER stands for Safety, Accountability, Fairness, Explainability, and Reliability. Reliability is explicit because electric-sector AI must hold up under changing, stressed, and degraded operating conditions, not merely perform well in a demonstration.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>How does SAFERai.Power relate to NIST AI RMF, ISO/IEC 42001, IEC 62443, NERC CIP, and the EU AI Act?</summary>
+            <div class="faq-answer"><p>SAFERai.Power is designed to complement those structures, not replace them. It maps high-level AI risk, management-system, cybersecurity, reliability, and lifecycle concepts into electric-sector risk classifications, evidence packages, evaluation methods, operating-boundary templates, and assurance pathways.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>Will SAFERai.Power replace our internal AI governance program?</summary>
+            <div class="faq-answer"><p>No. SAFERai.Power is not a replacement for internal AI governance. Mature organizations can plug its risk assessment methods, evidence templates, and tool workflows into existing risk councils, AI centers of excellence, data governance, cybersecurity, internal audit, legal review, and operational approval processes. Smaller or less mature organizations can use it as a practical starting point.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>What is the AI System File?</summary>
+            <div class="faq-answer"><p>The AI System File is the minimum common evidence package for a material AI system. It includes intended purpose, data provenance, capabilities and limitations, autonomy and oversight design, TEVV results, deployment conditions, monitoring and incident plans, reassessment triggers, and stronger evidence for higher-consequence applications.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>What is U-SAFER?</summary>
+            <div class="faq-answer"><p>U-SAFER is the utility/electric-sector assessment method: a stable question set that can be applied across use cases while allowing metrics, thresholds, evidence, and acceptable tradeoffs to vary by domain, risk tier, and autonomy level.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>What types of AI will the framework and tools cover?</summary>
+            <div class="faq-answer"><p>It is intended to cover traditional machine learning, generative AI, embedded AI features in enterprise platforms, retrieval-augmented systems, agentic workflows, optimization systems, vision systems, operator decision support, and selected OT-connected or control-room-adjacent applications where appropriate.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>Will the framework tell us which model or vendor to use?</summary>
+            <div class="faq-answer"><p>No. SAFERai.Power standardizes evidence, assessment questions, decision logic, and assurance expectations. It does not prescribe one model architecture, technology stack, vendor, or business model.</p></div>
+          </details>
+          <details class="faq-item" data-category="framework">
+            <summary>How does SAFERai.Power handle human authority?</summary>
+            <div class="faq-answer"><p>The framework treats human authority as central. AI may assist consequential work, but it should not become the single point of failure for safety-critical functions. Oversight, escalation, override, appeal, and rollback paths must be explicit and tested for higher-consequence use cases.</p></div>
+          </details>
+          <details class="faq-item" data-category="assurance">
+            <summary>What is the difference between product assurance and deployment assurance?</summary>
+            <div class="faq-answer"><p>Product assurance asks whether a provider’s product, version, intended purpose, dependencies, validation evidence, and limitations are suitable for defined electric-sector use cases. Deployment assurance asks whether the local utility implementation, permissions, integrations, procedures, training, monitoring, and human oversight are adequate in practice.</p></div>
+          </details>
+          <details class="faq-item" data-category="assurance">
+            <summary>Will SAFERai.Power certify products or deployments?</summary>
+            <div class="faq-answer"><p>The initiative is expected to define assurance and attestation pathways. Any assurance signal should be scope-bound to a product or deployment, version, intended purpose, operating boundary, and reassessment rules. It should not imply blanket approval of an entire company or technology platform.</p></div>
+          </details>
+          <details class="faq-item" data-category="assurance">
+            <summary>What are the risk tiers?</summary>
+            <div class="faq-answer"><p>The working model classifies AI by consequence, autonomy level, system access, write authority, oversight, reversibility, and operating context. Low-consequence productivity use requires lighter controls; operationally influential, OT-connected, reliability-adjacent, or safety-critical use requires stronger validation, oversight, monitoring, and assurance.</p></div>
+          </details>
+          <details class="faq-item" data-category="assurance">
+            <summary>How does the framework govern autonomy?</summary>
+            <div class="faq-answer"><p>Autonomy is treated as a governed capability, not a feature toggle. Typical levels include Advisory, Supervised Action, Guarded Autonomy, and Autonomous. Higher autonomy requires stronger safeguards such as explicit approval, least privilege, hard constraints, kill switches, deterministic fallback, independent validation, and executive approval where consequences are high.</p></div>
+          </details>
+          <details class="faq-item" data-category="assurance">
+            <summary>Are fully autonomous grid actions allowed?</summary>
+            <div class="faq-answer"><p>They are presumed exceptional. SAFERai.Power should explicitly flag out-of-bounds or presumed unacceptable patterns such as AI becoming the sole protective or safety mechanism, or fully autonomous live switching, shedding, or protection-relevant action without deterministic guardrails and an approved safety and reliability case.</p></div>
+          </details>
+          <details class="faq-item" data-category="assurance">
+            <summary>What happens after a system goes live?</summary>
+            <div class="faq-answer"><p>Deployment is not the end of assessment. Monitoring should track performance, drift, incidents, exceptions, user behavior, version changes, supplier changes, complaints, and operating-condition changes. Significant changes or incidents should trigger reassessment, suspension, rollback, or retirement when needed.</p></div>
+          </details>
+          <details class="faq-item" data-category="assurance">
+            <summary>What evidence would a high-consequence system need?</summary>
+            <div class="faq-answer"><p>Higher-consequence systems may require formal validation, cyber/OT integration assessment, simulator or shadow-mode testing, safety and reliability cases, independent review, enhanced monitoring, manual override validation, incident drills, executive approval, and strict reassessment triggers.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>Who should participate?</summary>
+            <div class="faq-answer"><p>Utilities, ISOs/RTOs, public power, cooperatives, technology providers, AI platform providers, hyperscalers, infrastructure companies, implementation partners, advisory firms, research organizations, and other stakeholders with a role in trusted AI adoption in the electric sector should consider participating.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>What are the participation tiers?</summary>
+            <div class="faq-answer"><p>Lead Partner is $40,000 per year, Standard Partner is $25,000 per year, and Emerging Partner is $15,000 per year. Each reflects a two-year participation arc and may be paid annually or upfront.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>Does a higher tier buy more influence over the framework?</summary>
+            <div class="faq-answer"><p>No. Participation fees support framework development; they do not buy commercial control over framework design. Across all paid tiers, founding members receive equivalent access to the substantive work, and all tiers participate as equals in the collaborative design process.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>What does the two-year commitment cover?</summary>
+            <div class="faq-answer"><p>The two-year structure covers the foundational development arc for the risk framework, evidence-package templates, pilots, registry model, and tool components. It supports co-development, working group engagement, early artifacts, pilots, and transition toward enduring stewardship.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>Can participants join mid-cycle?</summary>
+            <div class="faq-answer"><p>Yes. Participants joining mid-cycle are welcome, and fee structures are expected to be prorated.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>What if the Emerging Partner tier is still a barrier?</summary>
+            <div class="faq-answer"><p>EPRI’s access principle is that no qualified utility, cooperative, or innovator should be excluded due to fee structure alone. Organizations should contact EPRI to discuss participation pathways, including potential fee adjustments supported by philanthropic or government grant funding.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>How much staff time is expected?</summary>
+            <div class="faq-answer"><p>Every participating organization is expected to contribute skilled subject-matter expert time alongside funding. The planning estimate is approximately 80 hours of SME time per year, with the specific scope defined collaboratively with the EPRI project team.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>What kinds of SMEs should we involve?</summary>
+            <div class="faq-answer"><p>Useful expertise falls into two broad domains: operational domain expertise such as grid operations, planning, distribution operations, customer operations, asset management, vegetation management, field work, and OT environments; and digital/AI expertise such as AI/ML, MLOps, model registries, open-source tooling, assurance, testing, and agentic systems.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>Do participants have to be strong in both utility operations and AI?</summary>
+            <div class="faq-answer"><p>No. Many participants will be stronger in one domain. The value of the initiative comes from combining operational expertise, AI expertise, cyber expertise, implementation experience, and regulatory perspective across the founding membership.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>What exactly do founding members receive?</summary>
+            <div class="faq-answer"><p>Founding members receive working group participation, early access to risk assessment artifacts, pilot participation opportunities, dedicated roadmap and pilot reviews, structured engagement with technology providers and APEX stakeholders, and recognition as founding members at major milestones.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>Can we publicly say we are a founding member?</summary>
+            <div class="faq-answer"><p>The participation materials anticipate recognition as a founding member upon v1.0 publication and at major framework milestones. Specific public communications, logo use, and press language should be coordinated with EPRI.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>How do we start?</summary>
+            <div class="faq-answer"><p>Send an email to bsooter@epri.com requesting an initial briefing. The next steps are usually an exploratory conversation, participation tier selection, fee structure confirmation, SME contribution scoping, and working group onboarding.</p></div>
+          </details>
+          <details class="faq-item" data-category="data">
+            <summary>Do we have to share sensitive operational or customer data?</summary>
+            <div class="faq-answer"><p>The initiative should support multiple collaboration patterns and does not require unrestricted sharing of sensitive data. Possible mechanisms include de-identification, aggregation, privacy-preserving analysis, synthetic data, reference schemas, metadata, and controlled pilot evidence. Data rights, restrictions, and confidentiality are core framework topics.</p></div>
+          </details>
+          <details class="faq-item" data-category="data">
+            <summary>How does SAFERai.Power handle cyber and OT boundaries?</summary>
+            <div class="faq-answer"><p>The framework explicitly accounts for least privilege, zones and segmentation, controlled interfaces, secure access, credential hygiene, supply-chain evidence, logging, monitoring, change approval, rollback discipline, and regulated or BES-sensitive operational data. It adds AI-specific evidence on top of existing OT and reliability practices.</p></div>
+          </details>
+          <details class="faq-item" data-category="data">
+            <summary>How are privacy and confidentiality handled?</summary>
+            <div class="faq-answer"><p>Privacy and confidentiality are enabling disciplines across all layers. Data sheets and provenance records should document data sources, rights, restrictions, retention, sensitivity, quality, limitations, access controls, and lawful-use constraints.</p></div>
+          </details>
+          <details class="faq-item" data-category="data">
+            <summary>Will the framework address export-controlled, nuclear, or legally restricted information?</summary>
+            <div class="faq-answer"><p>Yes. Restricted statutory data is a distinct data class in the framework concept and should be treated with hard legal gating, strong access controls, and no uncontrolled external model exposure.</p></div>
+          </details>
+          <details class="faq-item" data-category="data">
+            <summary>How does SAFERai.Power handle model drift?</summary>
+            <div class="faq-answer"><p>Drift is handled through monitoring plans, key performance and risk indicators, thresholds, revalidation triggers, incident signals, and change records. Reassessment should be triggered by major model changes, data changes, prompt or orchestration changes, expanded intended use, increased autonomy, new integrations, OT boundary changes, supplier changes, incidents, or persistent degradation.</p></div>
+          </details>
+          <details class="faq-item" data-category="technology">
+            <summary>Why should technology providers join?</summary>
+            <div class="faq-answer"><p>Technology providers gain a credible path into the electric-sector market by helping define what “power-sector-ready” AI evidence looks like. They can shape provider-side evidence packages and learn how utilities evaluate product assurance, deployment constraints, and operational risk.</p></div>
+          </details>
+          <details class="faq-item" data-category="technology">
+            <summary>Can implementation and advisory partners participate?</summary>
+            <div class="faq-answer"><p>Yes. Implementation and advisory partners can help define adoption methods, training curricula, deployment assurance practices, and services the sector will need to operationalize SAFERai.Power at scale.</p></div>
+          </details>
+          <details class="faq-item" data-category="technology">
+            <summary>What supplier evidence will utilities likely request?</summary>
+            <div class="faq-answer"><p>Expected evidence may include a system card, declared intended and out-of-scope uses, model or dependency inventory, evaluation summaries, version and update notification discipline, incident support, security evidence, known limitations, and documentation of major third-party dependencies.</p></div>
+          </details>
+          <details class="faq-item" data-category="technology">
+            <summary>Does participation give a vendor preferred commercial status?</summary>
+            <div class="faq-answer"><p>No. Participation supports framework development and engagement. It does not buy commercial advantage over framework design, does not create blanket product approval, and should not be represented as a substitute for scoped product or deployment evidence.</p></div>
+          </details>
+          <details class="faq-item" data-category="technology">
+            <summary>Will the toolkit be open source?</summary>
+            <div class="faq-answer"><p>The full toolkit is intended to be released as open source after the framework, evidence templates, pilots, and registry-backed assessment workflows are developed and validated. Founding members get early access to artifacts and reference components as they are developed before public release.</p></div>
+          </details>
+          <details class="faq-item" data-category="technology">
+            <summary>Will SAFERai.Power include an AI system registry?</summary>
+            <div class="faq-answer"><p>Yes. The framework and tools emphasize an AI System Registry rather than only a model registry because many deployments include products, embedded platform features, prompts, orchestration, agents, RAG pipelines, APIs, local permissions, human review steps, and external model dependencies.</p></div>
+          </details>
+          <details class="faq-item" data-category="regulatory">
+            <summary>How can regulators, reliability organizations, and standards bodies participate?</summary>
+            <div class="faq-answer"><p>Regulatory, reliability, standards, and policy organizations can participate through EPRI’s APEX platform at no cost under Chatham House Rules. This route is intended for organizations such as NERC, NARUC, NIST, FERC, DOE, state PUCs, and international counterparts.</p></div>
+          </details>
+          <details class="faq-item" data-category="regulatory">
+            <summary>What is APEX?</summary>
+            <div class="faq-answer"><p>APEX is EPRI’s AI and Power Exchange platform. For SAFERai.Power, it provides a no-fee stakeholder engagement pathway for policy, regulatory, reliability, and standards organizations to observe, shape assurance evidence expectations, and support cross-jurisdictional dialogue.</p></div>
+          </details>
+          <details class="faq-item" data-category="regulatory">
+            <summary>Will regulators influence the framework?</summary>
+            <div class="faq-answer"><p>The participation model encourages early engagement with regulators and standards stakeholders so the sector can shape practical expectations before fragmented requirements are imposed reactively. Paid tiers still participate through the collaborative working group process, while APEX provides structured visibility for public bodies.</p></div>
+          </details>
+          <details class="faq-item" data-category="regulatory">
+            <summary>Is SAFERai.Power a regulatory requirement?</summary>
+            <div class="faq-answer"><p>No. It is not a law or regulatory regime. It is intended to become a practical sector framework that utilities, technology partners, auditors, and regulators can use as a common language for risk assessment, evidence, assurance, lifecycle monitoring, and responsible AI deployment.</p></div>
+          </details>
+          <details class="faq-item" data-category="roadmap">
+            <summary>What starts first?</summary>
+            <div class="faq-answer"><p>The first step is founding-member mobilization: confirming participants, aligning on scope, selecting priority use cases, and organizing domain and technology working groups.</p></div>
+          </details>
+          <details class="faq-item" data-category="roadmap">
+            <summary>What is delivered in the first six months?</summary>
+            <div class="faq-answer"><p>The Foundation phase is expected to produce the working group charter, common glossary and data classes, draft AI System File schema, initial risk classification and autonomy guidance, founding member onboarding, APEX listening sessions, and technology-provider working group launch.</p></div>
+          </details>
+          <details class="faq-item" data-category="roadmap">
+            <summary>What happens during Build and Pilot?</summary>
+            <div class="faq-answer"><p>Months 7–12 focus on tiered test protocols, an AI System Registry prototype, monitoring and incident runbooks, pilot evaluations on representative use cases, and working group review cycles.</p></div>
+          </details>
+          <details class="faq-item" data-category="roadmap">
+            <summary>When is the full toolkit released?</summary>
+            <div class="faq-answer"><p>The full open-source SAFERai.Power toolkit is targeted for release after the framework and evidence templates have been piloted, validated, and converted into practical registry-backed assessment workflows.</p></div>
+          </details>
+          <details class="faq-item" data-category="roadmap">
+            <summary>Do founding members get value before 2028?</summary>
+            <div class="faq-answer"><p>Yes. The initiative is built as a learn-and-do cycle. Founding members help shape artifacts as they emerge, apply them to live use cases, join pilots, and feed lessons into the next iteration before the full tool suite is released.</p></div>
+          </details>
+          <details class="faq-item" data-category="roadmap">
+            <summary>What pilot use cases are likely?</summary>
+            <div class="faq-answer"><p>Initial candidates include customer-service copilots, vegetation and asset analytics, outage prediction and restoration prioritization support, planning models, and selected agentic workflows in business or customer operations. Higher-tier OT-connected use cases should follow once the evidence architecture and assurance pathways are ready.</p></div>
+          </details>
+          <details class="faq-item" data-category="roadmap">
+            <summary>What happens after 2028?</summary>
+            <div class="faq-answer"><p>The initiative is expected to transition to an enduring stewardship model for the risk framework, evidence package templates, registry model, and tool components, supported by philanthropic and government grant funding where appropriate.</p></div>
+          </details>
+          <details class="faq-item" data-category="membership">
+            <summary>Who should we contact to join?</summary>
+            <div class="faq-answer"><p>Contact EPRI at bsooter@epri.com. The fastest next step is to request an initial briefing.</p></div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section style="background: #fff;">
+      <div class="wrap">
+        <div class="final-cta">
+          <div class="kicker" style="color: #fff;">Join the founding cohort</div>
+          <h2>Help define the practical risk framework and tools for trusted AI in the electric power industry.</h2>
+          <p>Founding members shape the assessment methods, evidence templates, risk tiers, operating-boundary guidance, pilots, registry model, and open-source toolkit before fragmented approaches harden across the market.</p>
+          <div class="contact-panel">
+            <div>
+              <strong>Contact Us</strong>
+              <span>SAFERai.Power founding member inquiries</span>
+              <span>bsooter@epri.com</span>
+            </div>
+            <a class="btn btn-primary" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Founding%20Member%20Interest&body=Hello%2C%0A%0AI%27d%20like%20to%20schedule%20an%20initial%20briefing%20about%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0APotential%20participation%20tier%3A%0AQuestions%3A%0A">Email Us →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p><strong>SAFERai.Power</strong> | Electric Power Research Institute</p>
+      <p>© 2026 Electric Power Research Institute (EPRI), Inc. All rights reserved.</p>
+      <p><a href="mailto:bsooter@epri.com">bsooter@epri.com</a></p>
+    </div>
+  </footer>
+
+  <a class="sticky-mobile-cta" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Founding%20Member%20Interest&body=Hello%2C%0A%0AI%27d%20like%20to%20schedule%20an%20initial%20briefing%20about%20SAFERai.Power.%0A%0AOrganization%3A%0ARole%3A%0AQuestions%3A%0A">Contact Us to Join</a>
+
+  <script>
+    const menuToggle = document.querySelector('.menu-toggle');
+    const nav = document.getElementById('site-nav');
+    menuToggle?.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+    nav?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+      nav.classList.remove('open');
+      menuToggle?.setAttribute('aria-expanded', 'false');
+    }));
+
+    const search = document.getElementById('faqSearch');
+    const items = Array.from(document.querySelectorAll('.faq-item'));
+    const buttons = Array.from(document.querySelectorAll('.filter-btn'));
+    const count = document.getElementById('faqCount');
+    let activeFilter = 'all';
+
+    function updateFaq() {
+      const query = (search?.value || '').toLowerCase().trim();
+      let visible = 0;
+      items.forEach(item => {
+        const category = item.dataset.category;
+        const text = item.innerText.toLowerCase();
+        const matchesCategory = activeFilter === 'all' || category === activeFilter;
+        const matchesSearch = !query || text.includes(query);
+        const show = matchesCategory && matchesSearch;
+        item.hidden = !show;
+        if (show) visible += 1;
+      });
+      count.textContent = visible === items.length ? 'Showing all FAQs' : `Showing ${visible} of ${items.length} FAQs`;
     }
-    close();
-    if(/^###\s+/.test(t)) out+='<h3>'+inlineMd(t.replace(/^###\s+/,''))+'</h3>';
-    else if(/^##\s+/.test(t)) out+='<h2>'+inlineMd(t.replace(/^##\s+/,''))+'</h2>';
-    else if(/^#\s+/.test(t)) out+='<h1>'+inlineMd(t.replace(/^#\s+/,''))+'</h1>';
-    else if(/^[-*]\s+/.test(t)){ if(!inUl){out+='<ul>';inUl=true} out+='<li>'+inlineMd(t.replace(/^[-*]\s+/,''))+'</li>'; }
-    else out+='<p>'+inlineMd(t)+'</p>';
-  }
-  close(); return out;
-}
-function inlineMd(s=''){return escapeHtml(s).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>')}
-function renderCompetitionSwitch(){
-  const root=$('#competitionSwitch'); root.innerHTML='';
-  Object.values(DATA.competitions).forEach(c=>{
-    const btn=document.createElement('button'); const st=dataStatus(c); btn.className='comp-btn '+(state.competition===c.id?'active ':'')+(st==='pending'?'pending':'');
-    btn.innerHTML=`<span class="dot"></span><span>${c.company}</span>${st==='complete'?'':`<span class="badge pending">${st}</span>`}`;
-    btn.onclick=()=>{state.competition=c.id; state.scoreMode='aggregate'; state.modelKey=null; renderAll();};
-    root.appendChild(btn);
-  });
-}
-function renderNav(){
-  ['#desktopNav','#mobileNav'].forEach(id=>{const root=$(id); root.innerHTML=''; navItems().forEach(([key,label])=>{const b=document.createElement('button'); b.textContent=label; b.className=state.tab===key?'active':''; b.onclick=()=>{state.tab=key; renderTabs(); window.scrollTo({top:0,behavior:'smooth'});}; root.appendChild(b);})})
-}
-function renderTabs(){
-  navItems().forEach(([key])=>{$('#tab-'+key).classList.toggle('active', state.tab===key)});
-  renderNav();
-  setTimeout(drawAllCharts,40);
-}
-function renderHero(){
-  const c=comp(); const scored=hasScores(c); const w=winnerLabel(c); const owner=docOwnerForWinner(c);
-  const a=scored?c.aggregate.meanA:null, b=scored?c.aggregate.meanB:null, margin=scored?Math.abs(a-b):null;
-  $('#hero').innerHTML=`
-  <div class="hero-grid">
-    <div>
-      <span class="eyebrow">${scored?(dataStatus(c)==='partial'?'Partial consensus ready':'Consensus ready'):'Awaiting source files'}</span>
-      <h2>${scored?`<span class="grad">${w}</span> wins for ${c.targetShort}`:`${c.company} <span class="grad">round ready</span>`}</h2>
-      <p class="hero-copy">${escapeHtml(c.summary)}</p>
-      <div class="hero-actions">
-        <button class="primary" onclick="goTab('scores')">${scored?'Explore scores':'Load RR files'}</button>
-        <button class="secondary" onclick="goTab('models')">Model analyses</button>
-        <button class="secondary" onclick="goTab('prompt')">Transparency prompt</button>
-      </div>
-    </div>
-    <div class="status-card">
-      <div class="winner-orb">
-        <canvas id="winnerOrb"></canvas>
-        <div class="orb-label"><div><div class="big">${scored?owner:'Pending'}</div><div class="sub">${scored?`${w} • ${fmt(margin,1)} pt avg margin`:'RR files not found in this chat'}</div></div></div>
-      </div>
-      <div class="lockup">
-        <span class="pill">A: ${c.docA.owner}</span>
-        <span class="pill">B: ${c.docB.owner}</span>
-        <span class="pill">${scored?modelArray(c).length+' models':'no RR scores loaded'}</span>
-      </div>
-    </div>
-  </div>`;
-}
-function goTab(tab){ state.tab=tab; renderAll(); window.scrollTo({top:0,behavior:'smooth'}); }
-function renderOverview(){
-  const c=comp(); const scored=hasScores(c);
-  if(!scored){ $('#tab-overview').innerHTML=pendingHtml(c); attachDropzone(); return; }
-  const a=c.aggregate.meanA, b=c.aggregate.meanB, margin=a-b;
-  $('#tab-overview').innerHTML=`
-  <div class="metric-grid">
-    <div class="metric"><div class="label">Winner</div><div class="value">${winnerLabel(c)}</div><div class="hint">${docOwnerForWinner(c)} wins the round</div></div>
-    <div class="metric"><div class="label">Average score</div><div class="value">${fmt(a,1)} vs ${fmt(b,1)}</div><div class="hint">Document A vs Document B</div></div>
-    <div class="metric"><div class="label">Average margin</div><div class="value">+${fmt(Math.abs(margin),1)}</div><div class="hint">${margin>0?'Document A advantage':'Document B advantage'}</div></div>
-    <div class="metric"><div class="label">Model votes</div><div class="value">${c.aggregate.modelsForA} / ${c.aggregate.modelsTotal}</div><div class="hint">frontier models backing A</div></div>
-  </div>
-  <div class="grid-2" style="margin-top:18px">
-    <div class="card chart-card"><div class="card-head"><div><div class="kicker">Canvas score bars</div><h3>Model-by-model total scores</h3></div><span class="badge a">live</span></div><div class="canvas-wrap"><canvas id="totalsChart"></canvas></div></div>
-    <div class="card chart-card"><div class="card-head"><div><div class="kicker">Canvas radar</div><h3>Consensus shape by rubric</h3></div><span class="badge a">aggregate</span></div><div class="canvas-wrap"><canvas id="radarChart"></canvas></div></div>
-  </div>
-  <div class="grid-2" style="margin-top:18px">
-    <div class="card">
-      <div class="kicker">Executive readout</div><h3>${escapeHtml(c.headline)}</h3>
-      <p>${escapeHtml(c.summary)}</p>
-    </div>
-    <div class="card">
-      <div class="kicker">Scoreboard</div><h3>Document A vs Document B</h3>
-      <div class="compare-strip">
-        <div class="doc-card"><span class="badge a">Document A</span><div class="score">${fmt(a,1)}</div><div class="owner">${c.docA.display}</div></div>
-        <div class="doc-card b"><span class="badge b">Document B</span><div class="score">${fmt(b,1)}</div><div class="owner">${c.docB.display}</div></div>
-      </div>
-    </div>
-  </div>`;
-}
-function pendingHtml(c){return `<div class="pending-panel" style="margin-top:18px">
-  <div class="card-head"><div><div class="kicker">Rolls-Royce section</div><h3>${escapeHtml(c.headline)}</h3></div><span class="badge pending">awaiting files</span></div>
-  <p>${escapeHtml(c.summary)}</p>
-  <div class="dropzone" id="dropzone">
-    <h3>Import the RR Markdown files locally</h3>
-    <p>Select or drag in <strong>RR-analysis-prompt.md</strong> plus the ChatGPT, Claude, and Gemini Rolls-Royce analysis files. The dashboard parses score tables in the browser and stores the results locally.</p>
-    <input id="fileInput" type="file" multiple accept=".md,.txt" style="display:none" />
-    <button class="primary" onclick="document.getElementById('fileInput').click()">Choose RR files</button>
-    <button class="secondary" onclick="exportSnapshot()">Export snapshot after import</button>
-    <div class="file-list" id="fileList"></div>
-  </div>
-</div>`}
-function renderScores(){
-  const c=comp(); if(!hasScores(c)){$('#tab-scores').innerHTML=pendingHtml(c); attachDropzone(); return;}
-  const modes=['aggregate',...Object.keys(c.models)];
-  const options=modes.map(m=>`<option value="${m}" ${state.scoreMode===m?'selected':''}>${m==='aggregate'?'Consensus average':c.models[m].label}</option>`).join('');
-  $('#tab-scores').innerHTML=`<div class="card" style="margin-top:18px">
-    <div class="card-head"><div><div class="kicker">Interactive scorecard</div><h3>Weighted rubric by category</h3></div><span class="badge a">click a row</span></div>
-    <div class="controls"><select class="select" id="scoreMode">${options}</select><select class="select" id="sortMode"><option value="category">Rubric order</option><option value="margin">Largest margin</option><option value="docA">Highest A score</option><option value="docB">Highest B score</option></select></div>
-    <div class="grid-2"><div class="canvas-wrap"><canvas id="marginChart"></canvas></div><div id="scoreSummary" class="card" style="box-shadow:none;background:rgba(255,255,255,.045)"></div></div>
-    <div id="scoreRows" class="score-cards" style="margin-top:16px"></div>
-    <div id="rowDrawer" class="analysis-html" style="display:none;margin-top:14px"></div>
-  </div>`;
-  $('#scoreMode').onchange=e=>{state.scoreMode=e.target.value; renderScoreRows(); drawAllCharts();};
-  $('#sortMode').onchange=e=>{state.sortMode=e.target.value; renderScoreRows(); drawAllCharts();};
-  renderScoreRows();
-}
-function rowsForMode(){
-  const c=comp();
-  if(state.scoreMode==='aggregate') return c.aggregate.rows.map(r=>({...r,aRaw:r.aRawAvg,bRaw:r.bRawAvg,aWeighted:r.aWeightedAvg,bWeighted:r.bWeightedAvg,margin:r.weightedMargin}));
-  const m=c.models[state.scoreMode];
-  return m.rows.map((r,i)=>({...r,category:c.categories[i].name,short:c.categories[i].short,weight:c.categories[i].weight,margin:+(r.aWeighted-r.bWeighted).toFixed(2),model:m.short}));
-}
-function sortedRows(rows){
-  if(state.sortMode==='margin') return rows.sort((a,b)=>Math.abs(b.margin)-Math.abs(a.margin));
-  if(state.sortMode==='docA') return rows.sort((a,b)=>b.aWeighted-a.aWeighted);
-  if(state.sortMode==='docB') return rows.sort((a,b)=>b.bWeighted-a.bWeighted);
-  return rows.sort((a,b)=>a.categoryId-b.categoryId);
-}
-function renderScoreRows(){
-  const c=comp(); let rows=sortedRows(rowsForMode()); const root=$('#scoreRows');
-  const aAvg=rows.reduce((s,r)=>s+r.aWeighted,0), bAvg=rows.reduce((s,r)=>s+r.bWeighted,0);
-  const aWins=rows.filter(r=>r.winner==='A').length, bWins=rows.filter(r=>r.winner==='B').length, ties=rows.filter(r=>r.winner==='Tie').length;
-  $('#scoreSummary').innerHTML=`<div class="kicker">${state.scoreMode==='aggregate'?'Consensus verdict':c.models[state.scoreMode].label}</div><h3>${aAvg>bAvg?'Document A leads':'Document B leads'} across this view</h3><p>A wins ${aWins} categories, B wins ${bWins}, and ${ties} are ties. Click any category row to see rationale across models.</p>`;
-  root.innerHTML=`<div class="score-row score-head"><div>Category</div><div>A Raw</div><div>A Wtd</div><div>B Raw</div><div>B Wtd</div><div>Margin</div><div>Winner</div><div>Rationale</div></div>`+
-  rows.map(r=>`<div class="score-row" data-id="${r.categoryId}"><div class="score-name"><strong>${r.categoryId}. ${escapeHtml(r.short||r.category)}</strong><small>${escapeHtml(r.category||'')}</small></div><div data-label="A Raw" class="num">${fmt(r.aRaw,2)}</div><div data-label="A Wtd" class="num">${fmt(r.aWeighted,2)}</div><div data-label="B Raw" class="num">${fmt(r.bRaw,2)}</div><div data-label="B Wtd" class="num">${fmt(r.bWeighted,2)}</div><div data-label="Margin" class="num ${r.margin>=0?'':'neg'}">${r.margin>=0?'+':''}${fmt(r.margin,2)}</div><div data-label="Winner"><span class="badge ${r.winner==='A'?'a':r.winner==='B'?'b':'tie'}">${r.winner}</span></div><div data-label="Rationale" class="rationale">${escapeHtml(r.rationale||consensusRationale(r))}</div></div>`).join('');
-  $$('.score-row[data-id]', root).forEach(row=>row.onclick=()=>showDrawer(+row.dataset.id));
-}
-function consensusRationale(row){
-  if(row.rationales) return Object.entries(row.rationales).map(([k,v])=>`${k}: ${v}`).join(' • ');
-  return row.rationale||'';
-}
-function showDrawer(id){
-  const c=comp(); const root=$('#rowDrawer'); const cat=c.categories[id-1];
-  const cards=modelArray(c).map(m=>{const r=m.rows[id-1]; if(!r) return ''; return `<div class="source-box"><h4>${m.short||m.label} <span class="badge ${r.winner==='A'?'a':r.winner==='B'?'b':'tie'}">${r.winner}</span></h4><p>${escapeHtml(r.rationale||'')}</p><code>A ${fmt(r.aWeighted,2)} / B ${fmt(r.bWeighted,2)}</code></div>`;}).join('');
-  root.style.display='block'; root.innerHTML=`<h3>${id}. ${escapeHtml(cat.name)}</h3><p>Model-by-model rationale for this rubric category.</p><div class="source-grid">${cards}</div>`;
-  root.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-function renderModels(){
-  const c=comp(); if(!hasScores(c)){$('#tab-models').innerHTML=pendingHtml(c); attachDropzone(); return;}
-  const arr=modelArray(c); if(!state.modelKey) state.modelKey=arr[0]?.key;
-  $('#tab-models').innerHTML=`<div class="card" style="margin-top:18px"><div class="card-head"><div><div class="kicker">Individual model analyses</div><h3>Open each frontier model’s full scoring and rationale</h3></div><span class="badge a">${arr.length} models</span></div><div class="model-tabs" id="modelTabs"></div><div id="modelPanels"></div></div>`;
-  const tabs=$('#modelTabs'); tabs.innerHTML='';
-  arr.forEach(m=>{const b=document.createElement('button'); b.textContent=m.label; b.className=state.modelKey===m.key?'active':''; b.onclick=()=>{state.modelKey=m.key; renderModels();}; tabs.appendChild(b);});
-  const m=arr.find(x=>x.key===state.modelKey)||arr[0];
-  $('#modelPanels').innerHTML=`<div class="model-panel active">
-    <div class="grid-2">
-      <div class="card" style="box-shadow:none;background:rgba(255,255,255,.045)"><div class="kicker">${escapeHtml(m.source||'source analysis')}</div><h3>${escapeHtml(m.headline||m.label+' verdict')}</h3><p>${escapeHtml(m.summary||'')}</p><div class="compare-strip"><div class="doc-card"><span class="badge a">A</span><div class="score">${fmt(m.totalA,1)}</div><div class="owner">${c.docA.display}</div></div><div class="doc-card b"><span class="badge b">B</span><div class="score">${fmt(m.totalB,1)}</div><div class="owner">${c.docB.display}</div></div></div></div>
-      <div class="card chart-card" style="box-shadow:none;background:rgba(255,255,255,.045)"><div class="kicker">Canvas margins</div><h3>${m.short||m.label} category margins</h3><div class="canvas-wrap"><canvas id="activeModelChart"></canvas></div></div>
-    </div>
-    <div class="grid-2" style="margin-top:14px">
-      <div class="card" style="box-shadow:none;background:rgba(255,255,255,.045)"><h3>Document A strengths</h3><ul class="clean">${(m.bestA||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')||'<li>See full analysis below.</li>'}</ul><hr class="sep"><h3>Document A watchouts</h3><ul class="clean">${(m.watchoutsA||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')||'<li>See full analysis below.</li>'}</ul></div>
-      <div class="card" style="box-shadow:none;background:rgba(255,255,255,.045)"><h3>Document B strengths</h3><ul class="clean">${(m.bestB||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')||'<li>See full analysis below.</li>'}</ul><hr class="sep"><h3>Document B watchouts</h3><ul class="clean">${(m.watchoutsB||[]).map(x=>`<li>${escapeHtml(x)}</li>`).join('')||'<li>See full analysis below.</li>'}</ul></div>
-    </div>
-    <div class="analysis-html" style="margin-top:14px">${m.fullHtml||tinyMd(m.fullText||'')}</div>
-  </div>`;
-}
-function renderCombined(){
-  const c=comp();
-  $('#tab-combined').innerHTML=`<div class="card" style="margin-top:18px"><div class="card-head"><div><div class="kicker">Best combined version</div><h3>What to take from each document</h3></div><span class="badge ${hasScores(c)?'a':'pending'}">${hasScores(c)?'ready':'pending'}</span></div><p>${escapeHtml(c.bestCombined?.[0]||'')}</p><div class="grid-2"><div class="doc-card"><h3>Keep from ${c.docA.display}</h3><ul class="clean">${combinedList(c,'A')}</ul></div><div class="doc-card b"><h3>Borrow from ${c.docB.display}</h3><ul class="clean">${combinedList(c,'B')}</ul></div></div><hr class="sep"><h3>Top improvements</h3><ul class="clean">${(c.bestCombined||[]).slice(1).map(x=>`<li>${escapeHtml(x)}</li>`).join('')}</ul></div>`;
-}
-function combinedList(c,side){
- if(!hasScores(c)) return '<li>Import analyses to generate evidence-backed recommendations.</li>';
- if(side==='A' && Array.isArray(c.bestTakeA)) return c.bestTakeA.map(x=>`<li>${escapeHtml(x)}</li>`).join('');
- if(side==='B' && Array.isArray(c.bestTakeB)) return c.bestTakeB.map(x=>`<li>${escapeHtml(x)}</li>`).join('');
- if(c.id==='adi' && side==='A') return ['Deep company-specific personalization','Specific technology-to-workstream mapping','Member ecosystem and validation logic','Specific scoping-session ask'].map(x=>`<li>${x}</li>`).join('');
- if(c.id==='adi' && side==='B') return ['Executive scannability and visual hierarchy','Three-pillar framing','Flex MOSAIC market language','Concise strategic value narrative'].map(x=>`<li>${x}</li>`).join('');
- return '<li>See model analyses.</li>';
-}
-function renderPrompt(){
-  const c=comp();
-  $('#tab-prompt').innerHTML=`<div class="card" style="margin-top:18px"><div class="card-head"><div><div class="kicker">Transparency</div><h3>Analysis prompt</h3></div><span class="badge ${c.promptRaw||c.promptHtml?'a':'pending'}">${c.promptRaw||c.promptHtml?'included':'missing'}</span></div>${c.promptHtml?`<div class="analysis-html">${c.promptHtml}</div>`:`<div class="prompt-box">${escapeHtml(c.promptRaw||'RR-analysis-prompt.md was not available in the uploaded source set. Import it in the Rolls-Royce section to display it here.')}</div>`}</div>`;
-}
-function renderSources(){
-  const all=Object.values(DATA.competitions);
-  $('#tab-sources').innerHTML=`<div class="card" style="margin-top:18px"><div class="card-head"><div><div class="kicker">Source ledger</div><h3>What is included and what is missing</h3></div><span class="badge a">transparent</span></div><div class="source-grid">${all.map(sc=>{const st=dataStatus(sc); return `<div class="source-box"><h4>${sc.company} <span class="badge ${st==='complete'?'a':'pending'}">${st}</span></h4><p>${escapeHtml(sc.transparencyNote||'')}</p><div>${(sc.sourceFiles||[]).map(f=>`<code>${escapeHtml(f)}</code>`).join('')}</div></div>`}).join('')}</div><hr class="sep"><p><strong>No fabricated scoring:</strong> Results are generated only from uploaded analyses that were accessible in this session. This version includes the analysis prompt plus all three frontier-model evaluations for both competitions.</p></div>`;
-}
-function renderAll(){renderCompetitionSwitch(); renderNav(); renderHero(); renderOverview(); renderScores(); renderModels(); renderCombined(); renderPrompt(); renderSources(); renderTabs();}
-function drawAllCharts(){drawWinnerOrb(); drawTotals(); drawRadar(); drawMargins(); drawActiveModel();}
-function prepCanvas(canvas){ if(!canvas) return null; const rect=canvas.getBoundingClientRect(); if(!rect.width||!rect.height) return null; const dpr=window.devicePixelRatio||1; canvas.width=Math.round(rect.width*dpr); canvas.height=Math.round(rect.height*dpr); const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w:rect.width,h:rect.height}; }
-function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
-function drawWinnerOrb(){const canvas=$('#winnerOrb'); const p=prepCanvas(canvas); if(!p)return; const {ctx,w,h}=p; ctx.clearRect(0,0,w,h); const t=Date.now()/1000; const cx=w/2, cy=h/2, R=Math.min(w,h)*.36; for(let i=0;i<54;i++){const a=i/54*Math.PI*2+t*.18; const r=R+Math.sin(t+i)*12; const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; ctx.fillStyle=i%2?'rgba(63,244,255,.5)':'rgba(66,245,182,.45)'; ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill();} const g=ctx.createRadialGradient(cx,cy,10,cx,cy,R*1.4); g.addColorStop(0,'rgba(63,244,255,.34)');g.addColorStop(.55,'rgba(66,245,182,.13)');g.addColorStop(1,'rgba(255,255,255,.02)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,R*1.3,0,Math.PI*2); ctx.fill(); }
-function drawTotals(){const c=comp(); if(!hasScores(c))return; const p=prepCanvas($('#totalsChart')); if(!p)return; const {ctx,w,h}=p; ctx.clearRect(0,0,w,h); const models=modelArray(c); const pad=28, labelW=82, barW=w-pad*2-labelW-42, group=(h-pad*2)/models.length; models.forEach((m,i)=>{const y=pad+i*group+18; ctx.fillStyle=css('--text'); ctx.font='800 13px '+css('--sans'); ctx.fillText(m.short||m.label,pad,y-10); [['A',m.totalA,css('--cyan'),css('--green')],['B',m.totalB,css('--gold'),css('--pink')]].forEach((d,j)=>{const yy=y+j*25; ctx.fillStyle='rgba(255,255,255,.07)'; roundRect(ctx,pad+labelW,yy,barW,13,7); ctx.fill(); const grad=ctx.createLinearGradient(pad+labelW,0,pad+labelW+barW,0); grad.addColorStop(0,d[2]); grad.addColorStop(1,d[3]); ctx.fillStyle=grad; roundRect(ctx,pad+labelW,yy,barW*(d[1]/100),13,7); ctx.fill(); ctx.fillStyle=css('--muted'); ctx.font='700 11px '+css('--sans'); ctx.fillText(d[0],pad+labelW-18,yy+10); ctx.fillStyle=css('--text'); ctx.fillText(fmt(d[1],1),pad+labelW+barW+8,yy+10);})})}
-function drawRadar(){const c=comp(); if(!hasScores(c))return; const p=prepCanvas($('#radarChart')); if(!p)return; const {ctx,w,h}=p; ctx.clearRect(0,0,w,h); const rows=c.aggregate.rows; const n=rows.length, cx=w/2, cy=h/2+8, R=Math.min(w,h)*.34; ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=1; for(let ring=1; ring<=5; ring++){ctx.beginPath(); for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n, rr=R*ring/5, x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr; i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.stroke();} rows.forEach((r,i)=>{const a=-Math.PI/2+i*2*Math.PI/n; ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke(); if(i%2===0){ctx.fillStyle=css('--muted');ctx.font='10px '+css('--sans');ctx.textAlign=Math.cos(a)<-.2?'right':Math.cos(a)>.2?'left':'center'; ctx.fillText(r.short,cx+Math.cos(a)*(R+18),cy+Math.sin(a)*(R+18));} }); function poly(vals,stroke,fill){ctx.beginPath(); vals.forEach((v,i)=>{const a=-Math.PI/2+i*2*Math.PI/n, rr=R*v/10, x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr; i?ctx.lineTo(x,y):ctx.moveTo(x,y);}); ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); ctx.strokeStyle=stroke; ctx.lineWidth=2; ctx.stroke();} poly(rows.map(r=>r.aRawAvg),css('--cyan'),'rgba(63,244,255,.13)'); poly(rows.map(r=>r.bRawAvg),css('--gold'),'rgba(255,209,102,.11)');}
-function drawMargins(){ if(state.tab!=='scores')return; const c=comp(); if(!hasScores(c))return; const p=prepCanvas($('#marginChart')); if(!p)return; const {ctx,w,h}=p; ctx.clearRect(0,0,w,h); const rows=sortedRows(rowsForMode()); drawMarginBars(ctx,w,h,rows); }
-function drawActiveModel(){ if(state.tab!=='models')return; const c=comp(); if(!hasScores(c))return; const p=prepCanvas($('#activeModelChart')); if(!p)return; const {ctx,w,h}=p; const m=c.models[state.modelKey]||modelArray(c)[0]; if(!m)return; const rows=m.rows.map((r,i)=>({...r,short:c.categories[i].short,margin:+(r.aWeighted-r.bWeighted).toFixed(2)})); ctx.clearRect(0,0,w,h); drawMarginBars(ctx,w,h,rows); }
-function drawMarginBars(ctx,w,h,rows){const padL=Math.min(142,w*.36), padR=24, padT=18, padB=20; const maxAbs=Math.max(1,...rows.map(r=>Math.abs(r.margin||0))); const zero=padL+(w-padL-padR)/2; const bh=Math.max(8,Math.min(16,(h-padT-padB)/rows.length-6)); const gap=((h-padT-padB)-bh*rows.length)/(rows.length-1||1); rows.forEach((r,i)=>{const y=padT+i*(bh+gap); ctx.fillStyle=css('--muted');ctx.font='11px '+css('--sans');ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(r.short||r.category, padL-9, y+bh/2); ctx.fillStyle='rgba(255,255,255,.08)'; roundRect(ctx,padL,y,w-padL-padR,bh,bh/2);ctx.fill(); const span=(w-padL-padR)/2-8; const bw=Math.abs(r.margin)/maxAbs*span; const x=r.margin>=0?zero:zero-bw; const grad=ctx.createLinearGradient(x,0,x+bw,0); if(r.margin>=0){grad.addColorStop(0,css('--cyan'));grad.addColorStop(1,css('--green'));}else{grad.addColorStop(0,css('--pink'));grad.addColorStop(1,css('--gold'));} ctx.fillStyle=grad; roundRect(ctx,x,y,bw,bh,bh/2); ctx.fill(); }); ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.beginPath();ctx.moveTo(zero,padT-4);ctx.lineTo(zero,h-padB+4);ctx.stroke();}
-let bgParticles=[];
-function initBg(){const canvas=$('#bgCanvas'); const ctx=canvas.getContext('2d'); function resize(){const dpr=window.devicePixelRatio||1; canvas.width=innerWidth*dpr; canvas.height=innerHeight*dpr; canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); const count=Math.min(90,Math.floor(innerWidth*innerHeight/17000)); bgParticles=Array.from({length:count},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:Math.random()*1.9+.4}));} resize(); addEventListener('resize',resize); function tick(){ctx.clearRect(0,0,innerWidth,innerHeight); for(const p of bgParticles){p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>innerWidth)p.vx*=-1; if(p.y<0||p.y>innerHeight)p.vy*=-1; ctx.fillStyle='rgba(63,244,255,.35)'; ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();} for(let i=0;i<bgParticles.length;i++) for(let j=i+1;j<bgParticles.length;j++){const a=bgParticles[i],b=bgParticles[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy); if(d<130){ctx.strokeStyle=`rgba(63,244,255,${(1-d/130)*.08})`;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}} requestAnimationFrame(tick);} tick();}
-function attachDropzone(){const dz=$('#dropzone'), input=$('#fileInput'); if(!dz||!input)return; input.onchange=()=>handleFiles(input.files); ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault(); dz.classList.add('drag')})); ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault(); dz.classList.remove('drag')})); dz.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));}
-async function handleFiles(files){files=Array.from(files||[]); if(!files.length)return; const list=$('#fileList'); if(list) list.innerHTML=files.map(f=>`<div class="file-item"><span>${escapeHtml(f.name)}</span><span>${Math.round(f.size/1024)} KB</span></div>`).join(''); const entries=[]; for(const f of files){entries.push({name:f.name,text:await f.text()})} const rr=buildCompetitionFromFiles(entries); DATA.competitions.rr=rr; localStorage.setItem('dcflex-rr-competition',JSON.stringify(rr)); state.competition='rr'; state.tab='overview'; state.scoreMode='aggregate'; state.modelKey=null; toast('Rolls-Royce files imported locally'); renderAll();}
-function buildCompetitionFromFiles(entries){const base=DATA.competitions.rr; const rr=JSON.parse(JSON.stringify(base)); rr.status='complete'; rr.promptRaw=''; rr.promptHtml=''; rr.models={}; rr.transparencyNote='Rolls-Royce data imported locally in the browser from Markdown files.'; rr.sourceFiles=entries.map(e=>e.name); for(const e of entries){ if(/prompt/i.test(e.name)){rr.promptRaw=e.text; rr.promptHtml=tinyMd(e.text); continue;} const modelKey=modelKeyFromName(e.name,e.text); const parsed=parseAnalysis(e.text,e.name,modelKey,rr.categories); rr.models[modelKey]=parsed; } rr.aggregate=computeAggregate(rr); rr.headline=`${winnerLabel(rr)} wins the Rolls-Royce round after local import.`; rr.summary=`Imported ${Object.keys(rr.models).length} model analyses for the Rolls-Royce competition. Consensus scores and category margins were computed from the parsed scorecard tables in the uploaded Markdown files. Review the model tabs to verify the parsed rows.`; rr.bestCombined=['Use the parsed consensus winner as the spine, then borrow the strongest structural and messaging elements from the other document.','Validate parsed score rows against the original analyses before sharing externally.','Add a concise executive front page for the Rolls-Royce audience.','Make the business case explicit and quantified.','Make the next-step ask unmistakable.']; return rr;}
-function modelKeyFromName(name,text){const s=(name+' '+text.slice(0,500)).toLowerCase(); if(/claude/.test(s))return 'claude'; if(/gemini/.test(s))return 'gemini'; if(/chatgpt|gpt/.test(s))return 'chatgpt'; return 'model'+Math.floor(Math.random()*9999);}
-function parseAnalysis(text,name,key,categories){const label=key==='claude'?'Claude Opus 4.7':key==='gemini'?'Gemini 3 Deepthink':key==='chatgpt'?'ChatGPT 5.5 Pro':name; const short=key==='claude'?'Claude':key==='gemini'?'Gemini':key==='chatgpt'?'ChatGPT':'Model'; const rows=parseRows(text,categories); let totalA=sum(rows.map(r=>r.aWeighted)), totalB=sum(rows.map(r=>r.bWeighted)); const extracted=extractTotals(text); if(extracted.a) totalA=extracted.a; if(extracted.b) totalB=extracted.b; const summary=extractSummary(text); return {label,short,source:name,accent:key==='claude'?'#ff9f43':key==='gemini'?'#a073ff':'#42f5b6',totalA:+totalA.toFixed(2),totalB:+totalB.toFixed(2),margin:+(totalA-totalB).toFixed(2),confidence:(text.match(/confidence(?: level)?[:\s*]+(high|medium|low)/i)||[])[1]||'',headline:(summary.split('. ')[0]||`${label} analysis`).slice(0,180),summary,rows,fullHtml:tinyMd(text),fullText:text,bestA:bulletsAfter(text,'Document A'),bestB:bulletsAfter(text,'Document B'),watchoutsA:[],watchoutsB:[]};}
-function sum(a){return a.reduce((s,x)=>s+(+x||0),0)}
-function parseRows(text,categories){const rows=[]; const lines=text.split(/\r?\n/).filter(l=>l.trim().startsWith('|')); for(const line of lines){ if(/---|category\s*\|\s*weight/i.test(line)) continue; const lower=line.toLowerCase(); if(/total/.test(lower)) continue; const cells=line.split('|').slice(1,-1).map(c=>stripMd(c)); if(cells.length<6) continue; const nums=cells.map(c=>{const m=c.match(/-?\d+(?:\.\d+)?/); return m?parseFloat(m[0]):NaN;}); const finite=nums.filter(Number.isFinite); if(finite.length<5) continue; const firstNum=finite[0]; if(firstNum>20) continue; let weight,aRaw,aWeighted,bRaw,bWeighted; const idx = Number.isInteger(firstNum) && firstNum>=1 && firstNum<=12 && finite.length>=6 ? 1 : 0; [weight,aRaw,aWeighted,bRaw,bWeighted]=finite.slice(idx,idx+5); if(!weight||aRaw>10.5||bRaw>10.5) continue; const categoryId=rows.length+1; const cat=categories[categoryId-1]||{id:categoryId,name:cells[0]||`Category ${categoryId}`,short:cells[0]||`Cat ${categoryId}`,weight}; rows.push({categoryId,category:cat.name,short:cat.short,weight,aRaw,aWeighted,bRaw,bWeighted,winner:aWeighted>bWeighted?'A':bWeighted>aWeighted?'B':'Tie',rationale:cells[cells.length-1]||'',margin:+(aWeighted-bWeighted).toFixed(2)}); if(rows.length>=12)break; } return rows;}
-function extractTotals(text){const clean=stripMd(text); const a=(clean.match(/Document A\s*(?:—|-|:)?\s*(\d+(?:\.\d+)?)\s*\/\s*100/i)||clean.match(/A\s*(?:score|—|-|:)\s*(\d+(?:\.\d+)?)\s*\/\s*100/i)||[])[1]; const b=(clean.match(/Document B\s*(?:—|-|:)?\s*(\d+(?:\.\d+)?)\s*\/\s*100/i)||clean.match(/B\s*(?:score|—|-|:)\s*(\d+(?:\.\d+)?)\s*\/\s*100/i)||[])[1]; return {a:a?parseFloat(a):null,b:b?parseFloat(b):null};}
-function extractSummary(text){const m=text.match(/executive summary[\s\S]*?(?=\n\s*#{1,3}\s|\n\s*\*\*?\d|\n\s*---|$)/i); return stripMd((m?m[0]:text.slice(0,900))).replace(/Executive summary/i,'').slice(0,900) || 'Imported analysis.';}
-function bulletsAfter(text,heading){const i=text.toLowerCase().indexOf(heading.toLowerCase()); if(i<0)return[]; return text.slice(i,i+3000).split(/\r?\n/).filter(l=>/^\s*[-*]\s+/.test(l)).slice(0,4).map(l=>stripMd(l.replace(/^\s*[-*]\s+/,'')));}
-function computeAggregate(c){const models=modelArray(c).filter(m=>m.rows&&m.rows.length); const rows=[]; for(let i=0;i<c.categories.length;i++){const vals=models.map(m=>m.rows[i]).filter(Boolean); if(!vals.length)continue; const cat=c.categories[i]; const aRawAvg=avg(vals.map(v=>v.aRaw)), bRawAvg=avg(vals.map(v=>v.bRaw)), aWeightedAvg=avg(vals.map(v=>v.aWeighted)), bWeightedAvg=avg(vals.map(v=>v.bWeighted)); rows.push({categoryId:i+1,category:cat.name,short:cat.short,weight:cat.weight,aRawAvg:+aRawAvg.toFixed(2),bRawAvg:+bRawAvg.toFixed(2),aWeightedAvg:+aWeightedAvg.toFixed(2),bWeightedAvg:+bWeightedAvg.toFixed(2),weightedMargin:+(aWeightedAvg-bWeightedAvg).toFixed(2),winner:aWeightedAvg>bWeightedAvg?'A':bWeightedAvg>aWeightedAvg?'B':'Tie',modelWins:{A:vals.filter(v=>v.winner==='A').length,B:vals.filter(v=>v.winner==='B').length,Tie:vals.filter(v=>v.winner==='Tie').length},rationales:Object.fromEntries(models.map(m=>[m.short,m.rows[i]?.rationale||'']))});} const meanA=avg(models.map(m=>m.totalA)), meanB=avg(models.map(m=>m.totalB)); return {meanA:+meanA.toFixed(2),meanB:+meanB.toFixed(2),meanMargin:+(meanA-meanB).toFixed(2),medianA:median(models.map(m=>m.totalA)),medianB:median(models.map(m=>m.totalB)),modelsForA:models.filter(m=>m.totalA>m.totalB).length,modelsTotal:models.length,rows};}
-function avg(a){return a.length?sum(a)/a.length:0} function median(a){a=[...a].sort((x,y)=>x-y); if(!a.length)return 0; const mid=Math.floor(a.length/2); return a.length%2?a[mid]:+( (a[mid-1]+a[mid])/2 ).toFixed(2)}
-function exportSnapshot(){const rr=DATA.competitions.rr; if(!hasScores(rr)){toast('Import RR files first'); return;} const clone=document.documentElement.cloneNode(true); const script=clone.querySelector('#imported-data'); if(script) script.textContent=JSON.stringify({rr}).replace(/<\//g,'<\\/'); const blob=new Blob(['<!DOCTYPE html>\n'+clone.outerHTML],{type:'text/html'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='DCFlex_Executive_Evaluation_Dashboard_with_RR_snapshot.html'; a.click(); URL.revokeObjectURL(a.href);}
-window.addEventListener('resize',()=>setTimeout(drawAllCharts,80));
-
-// v6: redraw canvas charts when their parent containers actually change size.
-try {
-  const ro = new ResizeObserver(() => requestAnimationFrame(drawAllCharts));
-  document.querySelectorAll('.wrap,.hero,#tab-overview,#tab-scores,#tab-models,.canvas-wrap,.winner-orb').forEach(el => ro.observe(el));
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(drawAllCharts));
-} catch(e) {}
-
-initBg(); renderAll(); setInterval(drawWinnerOrb,1000/30);
-</script>
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        button.classList.add('active');
+        activeFilter = button.dataset.filter;
+        updateFaq();
+      });
+    });
+    search?.addEventListener('input', updateFaq);
+    updateFaq();
+  </script>
 </body>
 </html>
