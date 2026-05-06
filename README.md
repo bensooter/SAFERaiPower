@@ -1,3 +1,4 @@
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -35,7 +36,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scroll-padding-top: 130px; }
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
@@ -1068,8 +1069,7 @@ h3 { color: var(--navy); font-size: 24px; }
               <a class="button button-outline" href="mailto:bsooter@epri.com?subject=SAFERai.Power%20Lead%20Partner%20Interest">Contact Us</a>
             </div>
           </article>
-          <article class="price-card standard featured">
-            <div class="price-badge">Core option</div>
+          <article class="price-card standard">
             <div class="price-head"><p>Standard Partner</p><h3>$25,000</h3><span>per year · $50,000 over two years</span></div>
             <div class="price-body">
               <p class="who">Mid-size utilities, regional operators, established AI vendors, implementation partners, and advisory firms.</p>
